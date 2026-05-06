@@ -1,22 +1,67 @@
 <!DOCTYPE html>
 <html lang="en-us">
-<head>
-<style>
-#canvas {
-  border: solid black 1px;
-  touch-action: none;
-  display: block;
-}
-</style>
-<title>TRAX</title>
-<meta charset="UTF-8"/>
-<meta name="keywords" content="contouring, meteorology, TRACER"/>
-<meta name="author" content="Ezekiel Caldon"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-</head>
-<body>
-<canvas id="canvas" width="1000" height="600">Your browser is not supported.</canvas>
-<button id ="clear">Clear drawing</button>
-<script src="./trax_app.js"></script>
-</body>
+  <head>
+    <title>TRAX</title>
+    <meta charset="UTF-8"/>
+    <meta name="keywords" content="contouring, meteorology, TRACER"/>
+    <meta name="author" content="Ezekiel Caldon"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="trax_style.css">
+  </head>
+  <body>
+    <div id="drawingInterface">
+      <div id="topControls">
+        <div id="topLeftControls" class="rounded">
+          <button id="undo" disabled>&#8634;</button>
+          <button id="redo" disabled>&#8635;</button>
+          <button id="driveUpload" onclick="handleAuthClick()">Sign In</button>
+          <button id="download">Download</button>
+          <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
+        </div>
+        <div id="topCenterControls">
+          <label id="frameNum">No file uploaded</label>
+        </div>
+        <div id ="topRightControls">
+          <select name="layerPicker" id="layerPicker">
+          </select>
+        </div>
+      </div>
+      <div id="drawingContainer">
+        <div id="canvasContainer">
+          <canvas id="bckdCanvas"></canvas>
+          <canvas id="drawCanvas">Your browser doesn't support HTML Canvas.</canvas>
+        </div>
+        <div id="drawingTools">
+          <form id="toolSelectForm">
+            <input type="radio" id="selectTool" name="toolSelect" value="0" hidden>
+            <label for="selectTool" class="tool">&#8598;</label>
+            <input type="radio" id="penTool" name="toolSelect" value="1" checked hidden>
+            <label for="penTool" class="tool">&#10002;</label>
+            <input type="radio" id="panTool" name="toolSelect" value="2" hidden>
+            <label for="panTool" class="tool">&#10021;</label>
+          </form>
+        </div>
+      </div>
+      <div id="bottomControls">
+        <div id="overlayLastApparatus">
+          <input type="checkbox" id="overlayLast">
+          <label for="overlayLast">Overlay last</label>
+        </div>
+        <div id="frameSeekApparatus">
+          <button id ="backOne">&#9204;</button>
+          <input id="frameSlider" min="0" max="0" value="1" step="1" type="range">
+          <button id ="fwdOne">&#9205;</button>
+        </div>
+        <div id="contourEditApparatus">
+          <input type="color" id="contourColor" name="contourColor" value="#ff0000" disabled>
+          <input id="contourLabel" placeholder="Contour label" type="text" disabled>
+          <button id="endContour" disabled>&#9208;</button>
+          <button id="deleteContour" disabled> &#10006;</button>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="./trax_app.js"></script>
+  <script async defer src="https://apis.google.com/js/api.js?onload=gapiLoaded"></script>
+  <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
 </html>

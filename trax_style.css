@@ -1,0 +1,193 @@
+html, body {
+  height: 100%;
+  margin: 5px;
+}
+
+button {
+  font-size: 16px;
+  font-family: Arial, Helvetica, sans-serif;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+button:active {
+  background-color: rgb(150,200,200);
+}
+
+input {
+  font-size: 16px;
+  font-family: Arial, Helvetica, sans-serif;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+label {
+  color:Black;
+  margin-left: 5px;
+  margin-right: 5px;
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: center;
+}
+
+select {
+  font-size: 16px;
+  font-family: Arial, Helvetica, sans-serif;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.tool:active {
+  background-color: rgb(82, 114, 114);
+  border: 1px solid gray;
+  border-radius: 20px;
+  padding: 9px;
+}
+
+.tool:hover {
+  background-color: rgb(170, 192, 192);
+  border: 1px solid gray;
+  border-radius: 20px;
+  padding: 9px;
+}
+
+input[type="radio"]:checked + label {
+  background-color: rgb(82, 114, 114);
+  color: white;
+  border: 1px solid gray;
+  border-radius: 20px;
+  padding: 9px;
+}
+
+.tool {
+  font-size: 22px;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 10px;
+  margin-right: 1px;
+  margin-left: 0px;
+  cursor: pointer;
+}
+
+#bottomControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 0 0 auto;
+  place-content: normal center;
+}
+
+#drawingContainer {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  flex: 1;
+}
+
+#canvasContainer {
+  cursor: crosshair;
+  position: relative;
+  display: flex;
+  flex: 1; /* 1 content; */
+  align-items: center;
+  justify-content: center;
+  margin: 5px;
+  max-height: calc(100vh - 110px);
+  padding: 0px;
+}
+
+canvas { 
+  border: solid black 1px; 
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#drawingTools {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#contourEditApparatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: rgb(242,242,247);
+  border: solid gray 1px;
+  border-radius: 6px;
+  padding: 5px;
+}
+
+#drawingInterface {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+#toolSelectForm {
+  display: flex;
+  background-color: rgb(242,242,247);
+  border: solid gray 1px;
+  border-radius: 28px;
+  margin: 5px;
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  flex: 0 1 auto;
+  vertical-align: middle;
+  align-items: center;
+  justify-content: center;
+  place-content: space-between center;
+  flex-direction: column;
+  height: 130px;
+  width: 60px;
+}
+
+#frameSeekApparatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(242,242,247);
+  border: solid gray 1px;
+  border-radius: 6px;
+  margin-right: 5px;
+  padding: 5px;
+  flex: 1 1 auto;
+}
+
+#frameSlider {
+  width: 100%;
+}
+
+#overlayLastApparatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(242,242,247);
+  border: solid gray 1px;
+  border-radius: 6px;
+  margin-right: 5px;
+  padding: 5px;
+}
+
+#topControls {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  place-content: space-between space-between;
+  flex: 0 0 auto;
+}
+
+#topLeftControls {
+  background-color: rgb(242,242,247);
+  border: solid gray 1px;
+  border-radius: 6px;
+  margin: 5px;
+  padding: 10px;
+}
