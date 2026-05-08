@@ -109,7 +109,7 @@ class HistoryManager {
     if (this.history.length > 0) {
       const command = this.history.pop();
       command.undo();
-      drawClass.draw();
+      drawClass.draw(frame_idx);
       this.redoStack.push(command);
     }
     if (redo.disabled) {
@@ -126,7 +126,7 @@ class HistoryManager {
     if (this.redoStack.length > 0) {
       const command = this.redoStack.pop();
       command.execute();
-      drawClass.draw();
+      drawClass.draw(frame_idx);
       this.history.push(command);
     }
     if (undo.disabled) {
@@ -272,14 +272,14 @@ class DrawCanvasClass {
     drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
   }
 
-  draw() {
+  draw(frame) {
     this.clear();
 
     // draw all shapes
     var l = this.shapes.length;
     for (var i = 0; i < l; i++) {
       drawCtx.globalAlpha = 1.0;
-      this.shapes[i].draw(drawCtx, frame_idx);
+      this.shapes[i].draw(drawCtx, frame);
     }
 
     if (overlayLast.checked) {
@@ -287,7 +287,7 @@ class DrawCanvasClass {
         drawCtx.globalAlpha = 0.5;
         var l = this.shapes.length;
         for (var i = 0; i < l; i++) {
-          this.shapes[i].draw(drawCtx, frame_idx - 1);
+          this.shapes[i].draw(drawCtx, frame - 1);
         }
       }
     }
@@ -349,7 +349,7 @@ class DrawCanvasClass {
             startPoints: selPoints.map(p => ({x: p.x, y: p.y}))
           };
           this._historyManager.beginCommandGroup();
-          this.draw();
+          this.draw(frame_idx);
           return;
         }
       }
@@ -357,7 +357,7 @@ class DrawCanvasClass {
       // havent returned means we have selected nothing
       this.deSelect();
       // Draw again because we might need the selection boxes to disappear
-      this.draw();
+      this.draw(frame_idx);
     } else if (currentTool === 1) {
       if (this._selection == null) {
         const command = new CreateShapeCommand(this, mx, my);
@@ -374,7 +374,7 @@ class DrawCanvasClass {
           this._historyManager.executeCommand(new AddPointCommand(this._selection, mx, my));
         }
       }
-      this.draw();
+      this.draw(frame_idx);
     }
   }
 
@@ -383,11 +383,11 @@ class DrawCanvasClass {
     // If we're dragging a shape, move it by the amount the mouse has moved since the mouse originally clicked
     if (this.dragState && this.dragState.mode === 'body' && this._selection) {
       this._historyManager.executeCommand(new DragShapeCommand(this._selection, this.dragState, mouse));
-      this.draw();
+      this.draw(frame_idx);
     // If we're dragging the point of a shape, move just that point to the mouse location
     } else if (this.dragState && this.dragState.mode === 'point' && this._selection) {
       this._historyManager.executeCommand(new DragPointCommand(this._selection, this.expectResize, this.dragState, mouse))
-      this.draw();
+      this.draw(frame_idx);
     }
     
     if (this._selection !== null && (!this.dragState) && currentTool === 0) {
@@ -458,14 +458,14 @@ class DrawCanvasClass {
     contourLabel.value = "No contour selected";
     pauseButton.disabled = true;
     deleteButton.disabled = true;
-    this.draw();
+    this.draw(frame_idx);
   }
 
   changeSelectedShapeColor(event) {
     if (this._selection) {
       this._historyManager.executeCommand(new ColorChangeCommand(this._selection, event.target.value));
     }
-    this.draw();
+    this.draw(frame_idx);
   }
 
   changeSelectedShapeLabel(event) {
@@ -484,15 +484,17 @@ class DrawCanvasClass {
     if (this.selection) {
       this._historyManager.executeCommand(new ContourDeleteCommand(this, this._selection));
     }
-    this.draw();
+    this.draw(frame_idx);
   }
 
   getMaxNumPoints() {
     let max = 0;
     for (var i = 0; i < this.shapes.length; i++) {
       for (var j = 0; j < numFrames; j++) {
-        if (this.shapes[i].frames[j].length > max) {
-          max = this.shapes[i].frames[j].length
+        if (this.shapes[i].frames[j]) {
+          if (this.shapes[i].frames[j].length > max) {
+            max = this.shapes[i].frames[j].length
+          }
         }
       }
     }
@@ -612,12 +614,12 @@ class Shape {
       this._frames[i] = null;
     }
     drawClass.deSelect();
-    drawClass.draw();
+    drawClass.draw(frame_idx);
   }
   unpause(startPoints) {
     this._frames = startPoints;
     drawClass._selection = this;
-    drawClass.draw();
+    drawClass.draw(frame_idx);
   }
 }
 
@@ -950,7 +952,7 @@ async function drawRequestedFrame() {
   bckdClass.clear();
   drawClass.clear();
   bckdClass.draw(layer_idx, frame_idx);
-  drawClass.draw();
+  drawClass.draw(frame_idx);
 }
 
 /* Event listener & function to resize canvases with window resize */
@@ -977,28 +979,42 @@ redo.addEventListener("click", () => {
 });
 
 download.addEventListener("click", () => {
-  downloadCsv();
+  downloadAll();
 });
 
-function downloadImageFrames() {
+async function downloadAll() {
+  const imageArray = await downloadImageFrames();
+  const csv = downloadCsv();
+  generateZipDownload(imageArray, csv);
+}
+
+async function downloadImageFrames() {
   const tempCanvas = document.createElement("canvas");
   const tempCtx = tempCanvas.getContext("2d");
+  const imageArray = [];
   tempCanvas.width = bckdCanvas.width;
   tempCanvas.height = bckdCanvas.height;
-  
-  for (let i = 0; i < numFrames; i++) {
-    // Draw background and contours for the current frame onto the temporary canvas
-    bckdClass.draw(layer_idx, i);
-    drawClass.draw();
-    tempCtx.drawImage(bckdCanvas, 0, 0);
-    tempCtx.drawImage(drawCanvas, 0, 0);
+  drawClass.deSelect();
+  for (let i = 0; i < numLayers; i++) {
+    for (let j = 0; j < numFrames; j++) {
+      // Draw background and contours for the current frame onto the temporary canvas
+      bckdClass.draw(i, j);
+      drawClass.draw(j);
+      tempCtx.drawImage(bckdCanvas, 0, 0);
+      tempCtx.drawImage(drawCanvas, 0, 0);
 
-    // Create a link to download the temporary canvas as an image
-    const link = document.createElement("a");
-    link.download = `frame_${i+1}.png`;
-    link.href = tempCanvas.toDataURL('image/png');
-    link.click();
+      const blob = await new Promise (resolve => {
+        tempCanvas.toBlob(blob => resolve(blob));
+      });
+      imageArray.push(blob);
+      tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+    }
   }
+
+  bckdClass.draw(layer_idx, frame_idx);
+  drawClass.draw(frame_idx);
+  
+  return imageArray;
 }
 
 function downloadCsv() {
@@ -1032,14 +1048,26 @@ function downloadCsv() {
       }
     }
   }
+  return csvContent;
+}
 
-  var encodedUri = encodeURI(csvContent);
-  var link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", "trax_data.csv");
-  document.body.appendChild(link); // Required for FF
+async function generateZipDownload(imageArray, csv) {
+  const zip = new JSZip();
+  var photoZip = zip.folder("canvas_images")
+  for (i = 0; i < imageArray.length; i++) {
+    photoZip.file("image_" + i + ".png", imageArray[i]);
+  }
+  zip.file("shape_data.csv", csv);
 
-  link.click(); // This will download the data file.
+  const zipData = await zip.generateAsync({
+    type: "blob",
+    streamFiles: true
+  });
+
+  const link = document.createElement('a');
+  link.href = window.URL.createObjectURL(zipData);
+  link.download = "trax_output.zip";
+  link.click();
 }
 
 /* Event listener for layer picker */
@@ -1051,7 +1079,7 @@ layerPicker.addEventListener("change", (event) => {
 /* Event listener for overlayLast */
 
 overlayLast.addEventListener("click", () => {
-  drawClass.draw();
+  drawClass.draw(frame_idx);
 });
 
 /* Event listeners & functions for frame navigation */

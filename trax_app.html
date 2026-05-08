@@ -17,6 +17,7 @@
           <button id="driveUpload" onclick="handleAuthClick()">Sign In</button>
           <button id="download">Download</button>
           <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
+          <button id="help" onclick="window.open('https://github.com/ecaldon/trax_app/blob/main/README.md', 'blank')"">?</button>
         </div>
         <div id="topCenterControls">
           <label id="frameNum">No file uploaded</label>
@@ -62,6 +63,7 @@
     </div>
   </body>
   <script src="./trax_app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script async defer src="https://apis.google.com/js/api.js?onload=gapiLoaded"></script>
   <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
 </html>
