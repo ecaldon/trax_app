@@ -1027,7 +1027,7 @@ function downloadCsv() {
     headerRow.push("coord_" + ((i+1).toString() + "_y"));
   }
 
-  let csvContent = "data:text/csv;charset=utf-8,";
+  let csvContent = "";
 
   let row = headerRow.join(",");
   csvContent += row + "\r\n";
