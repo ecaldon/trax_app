@@ -1,31 +1,53 @@
+/* TRAX: Web app to perform meteorological analysis through the drawing of contours */
+/* Copyright (C) 2026 Ezekiel Caldon */
+/*
+This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+*/
+/*
+  This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+*/
+/*
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, email Ezekiel Caldon, zc009026@ohio.edu.
+*/
 /* Actual website code starts here */
 /* Global variables */
-let frame_idx = 0; // Global variable to track current frame index
+let frameIdx = 0; // Global variable to track current frame index
 let numFrames = 0;
-let layer_idx = 0; // Global variable to track current layer index
+let layerIdx = 0; // Global variable to track current layer index
 let numLayers = 0;
-const layer_filename_arrays = [];
+const layerFilenameArrays = [];
+let bckdClass;
+let drawClass;
+let currentTool = 1; // 0 = select, 1 = pen, 2 = pan
+/* Global constants */
+const mySelBoxSize = 9;
 /* HTML Objects */
 /* Top controls */
+/* Top left panel */
 const undo = document.querySelector("#undo");
 const redo = document.querySelector("#redo");
 const download = document.querySelector("#download");
+/* Frame label */
 const frameLabel = document.querySelector("#frameNum");
+/* Layer picker */
 const layerPicker = document.querySelector("#layerPicker");
 
 /* Canvas objects */
 const canvasContainer = document.querySelector("#canvasContainer");
 const bckdCanvas = document.querySelector("#bckdCanvas");
 const bckdCtx = bckdCanvas.getContext('2d');
-let bckdClass;
 const drawCanvas = document.querySelector("#drawCanvas");
 const drawCtx = drawCanvas.getContext('2d');
-const mySelBoxSize = 9;
-let drawClass;
 
 /* Draw controls */
 const toolRadios = document.querySelectorAll('input[name="toolSelect"]');
-let currentTool = 1; // 0 = select, 1 = pen, 2 = pan
 // Set current tool and cursor based on tool radios
 for(var i = 0, max = toolRadios.length; i < max; i++) {
     toolRadios[i].onclick = function() {
@@ -56,90 +78,6 @@ const pauseButton = document.querySelector("#endContour");
 const deleteButton = document.querySelector("#deleteContour");
 
 /* Command pattern classes */
-class HistoryManager {
-  constructor() {
-    this.history = [];
-    this.redoStack = [];
-    this.maxHistorySize = 100;
-    this.groupingActive = false;
-    this.currentCommandGroup = null;
-  }
-
-  executeCommand(command) {
-    command.execute();
-
-    if (this.groupingActive && this.currentCommandGroup) {
-      this.currentCommandGroup.addCommand(command);
-    } else {
-      // Clear redo stack when a new command is executed
-      this.redoStack = [];
-
-      // Add to history, maintaining max size
-      this.history.push(command);
-
-      if (this.history.length > this.maxHistorySize) {
-        this.history.shift(); // Remove oldest command
-      }
-    }
-    if (undo.disabled) {
-      undo.disabled = false;
-    }
-  }
-
-  beginCommandGroup() {
-    this.groupingActive = true;
-    this.currentCommandGroup = new CommandGroup();
-  }
-
-  endCommandGroup() {
-    if (this.groupingActive && this.currentCommandGroup) {
-      if (this.currentCommandGroup.commands.length > 0) {
-        this.redoStack = [];
-        this.history.push(this.currentCommandGroup);
-        if (this.history.length > this.maxHistorySize) {
-          this.history.shift();
-        }
-      }
-      this.groupingActive = false;
-      this.currentCommandGroup = null;
-    }
-  }
-
-  undo() {
-    if (this.history.length > 0) {
-      const command = this.history.pop();
-      command.undo();
-      drawClass.draw(frame_idx);
-      this.redoStack.push(command);
-    }
-    if (redo.disabled) {
-      redo.disabled = false;
-    }
-    if (this.history.length == 0) {
-      undo.disabled = true;
-    }
-    console.log("History ", this.history);
-    console.log("Redo stack ", this.redoStack);
-  }
-
-  redo() {
-    if (this.redoStack.length > 0) {
-      const command = this.redoStack.pop();
-      command.execute();
-      drawClass.draw(frame_idx);
-      this.history.push(command);
-    }
-    if (undo.disabled) {
-      undo.disabled = false;
-    }
-    if (this.redoStack.length == 0) {
-      redo.disabled = true;
-    }
-    console.log("History ", this.history);
-    console.log("Redo stack ", this.redoStack);
-  }
-}
-
 class Command {
   execute() {
     throw new Error('execute() method must be implemented');
@@ -171,6 +109,90 @@ class CommandGroup {
   }
 }
 
+class HistoryManager {
+  constructor() {
+    this.history = [];
+    this.redoStack = [];
+    this.maxHistorySize = 100; /* TODO: See what the greatest size without crashing the program could be */
+    this.groupingActive = false;
+    this.currentCommandGroup = null;
+  }
+
+  executeCommand(command) {
+    command.execute();
+
+    if (this.groupingActive && this.currentCommandGroup) {
+      this.currentCommandGroup.addCommand(command);
+    } else {
+      // Clear redo stack when a new command is executed
+      this.redoStack = [];
+
+      // Add to history, maintaining max size
+      this.history.push(command);
+
+      if (this.history.length > this.maxHistorySize) {
+        this.history.shift(); // Remove oldest command
+      }
+    }
+    if (undo.disabled) {
+      undo.disabled = false;
+    }
+  }
+
+  beginCommandGroup() { /* TODO: Abstract command group into beginning and end points for drag actions */
+    this.groupingActive = true;
+    this.currentCommandGroup = new CommandGroup();
+  }
+
+  endCommandGroup() {
+    if (this.groupingActive && this.currentCommandGroup) {
+      if (this.currentCommandGroup.commands.length > 0) {
+        this.redoStack = [];
+        this.history.push(this.currentCommandGroup);
+        if (this.history.length > this.maxHistorySize) {
+          this.history.shift();
+        }
+      }
+      this.groupingActive = false;
+      this.currentCommandGroup = null;
+    }
+  }
+
+  undo() {
+    if (this.history.length > 0) {
+      const command = this.history.pop();
+      command.undo();
+      drawClass.draw(frameIdx);
+      this.redoStack.push(command);
+    }
+    if (redo.disabled) {
+      redo.disabled = false;
+    }
+    if (this.history.length == 0) {
+      undo.disabled = true;
+    }
+    console.log("History ", this.history);
+    console.log("Redo stack ", this.redoStack);
+  }
+
+  redo() {
+    if (this.redoStack.length > 0) {
+      const command = this.redoStack.pop();
+      command.execute();
+      drawClass.draw(frameIdx);
+      this.history.push(command);
+    }
+    if (undo.disabled) {
+      undo.disabled = false;
+    }
+    if (this.redoStack.length == 0) {
+      redo.disabled = true;
+    }
+    console.log("History ", this.history);
+    console.log("Redo stack ", this.redoStack);
+  }
+}
+
 /* Canvas classes */
 class BckdCanvasClass {
   constructor(images, first_filename) {
@@ -178,7 +200,7 @@ class BckdCanvasClass {
     this.layers.push(images);
     numFrames = images.length;
     frameSlider.max = numFrames - 1;
-    frameSlider.value = frame_idx;
+    frameSlider.value = frameIdx;
     var opt = document.createElement('option');
     opt.value = numLayers;
     opt.innerHTML = first_filename;
@@ -195,9 +217,9 @@ class BckdCanvasClass {
     opt.value = numLayers++;
     opt.innerHTML = first_filename;
     layerPicker.appendChild(opt);
-    this.draw(numLayers-1, frame_idx);
+    this.draw(numLayers-1, frameIdx);
     layerPicker.selectedIndex = numLayers-1;
-    layer_idx = numLayers-1;
+    layerIdx = numLayers-1;
   }
 
   clear() {
@@ -225,30 +247,26 @@ class BckdCanvasClass {
 
 class DrawCanvasClass {
   constructor() {
-    // This complicates things a little but but fixes mouse co-ordinate problems when there's a border or padding
-    // see getMouse for more detail
-    this.styleBorderLeft = 0;
+    // Mouse offset variables
     this.styleBorderTop = 0;
+    this.styleBorderLeft = 0;
     if (window.getComputedStyle) {
-      this.styleBorderLeft = parseInt(getComputedStyle(drawCanvas, null).getPropertyValue('border-left-width'));
       this.styleBorderTop = parseInt(getComputedStyle(drawCanvas, null).getPropertyValue('border-top-width'));
+      this.styleBorderLeft = parseInt(getComputedStyle(drawCanvas, null).getPropertyValue('border-left-width')); /* TODO: Save scale factor */
     }
     var html = document.body.parentNode;
     this.htmlTop = html.offsetTop;
     this.htmlLeft = html.offsetLeft;
 
-    // State tracking
+    // Shape objects
     this._shapes = [];
-    this.dragState = null;
-    this.expectResize = -1;
     this._selection = null;
 
-    this.dragoffx = 0;
-    this.dragoffy = 0;
+    // State tracking
+    this.dragState = null;
+    this.expectResize = -1;
 
-    this.selectionColor = '#83fa7c';
-    this.selectionWidth = 2;
-
+    // History manager
     this._historyManager = new HistoryManager();
   }
 
@@ -276,18 +294,18 @@ class DrawCanvasClass {
     this.clear();
 
     // draw all shapes
-    var l = this.shapes.length;
+    var l = this._shapes.length;
     for (var i = 0; i < l; i++) {
       drawCtx.globalAlpha = 1.0;
-      this.shapes[i].draw(drawCtx, frame);
+      this._shapes[i].draw(drawCtx, frame);
     }
 
     if (overlayLast.checked) {
-      if (frame_idx > 0) {
+      if (frameIdx > 0) {
         drawCtx.globalAlpha = 0.5;
-        var l = this.shapes.length;
+        var l = this._shapes.length;
         for (var i = 0; i < l; i++) {
-          this.shapes[i].draw(drawCtx, frame - 1);
+          this._shapes[i].draw(drawCtx, frame - 1);
         }
       }
     }
@@ -319,7 +337,7 @@ class DrawCanvasClass {
     var my = pos.y;
     if (currentTool === 0) {
       if (this.expectResize !== -1) {
-        let selPoints = this._selection.getPoints(frame_idx);
+        let selPoints = this._selection.getPoints(frameIdx);
         this.dragState = {
           mode: 'point',
           startPoints: selPoints.map(p => ({x: p.x, y: p.y}))
@@ -333,7 +351,7 @@ class DrawCanvasClass {
       var l = this.shapes.length;
       for (var i = l-1; i >= 0; i--) {
         // if the mouse pixel exists, select and break
-        let selPoints = this.shapes[i].getPoints(frame_idx);
+        let selPoints = this.shapes[i].getPoints(frameIdx);
         if (this.shapes[i].hitTest(mx, my) > 0) {
           this._selection = this.shapes[i];
           colorPicker.disabled = false;
@@ -349,7 +367,7 @@ class DrawCanvasClass {
             startPoints: selPoints.map(p => ({x: p.x, y: p.y}))
           };
           this._historyManager.beginCommandGroup();
-          this.draw(frame_idx);
+          this.draw(frameIdx);
           return;
         }
       }
@@ -357,24 +375,24 @@ class DrawCanvasClass {
       // havent returned means we have selected nothing
       this.deSelect();
       // Draw again because we might need the selection boxes to disappear
-      this.draw(frame_idx);
+      this.draw(frameIdx);
     } else if (currentTool === 1) {
       if (this._selection == null) {
         const command = new CreateShapeCommand(this, mx, my);
         this._historyManager.executeCommand(command);
       } else {
-        let selPoints = this._selection.getPoints(frame_idx);
+        let selPoints = this._selection.getPoints(frameIdx);
         // If the user clicks near the starting point, close the shape and return to select mode
         if (mx > (selPoints[0].x - 5) && mx < (selPoints[0].x + 5) && my > (selPoints[0].y - 5) && my < (selPoints[0].y + 5)) {
           this._historyManager.beginCommandGroup();
-          this._historyManager.executeCommand(new AddPointCommand(this._selection, mx, my));
+          this._historyManager.executeCommand(new AddPointCommand(this._selection, selPoints[0].x, selPoints[0].y));
           this._historyManager.executeCommand(new CloseShapeCommand(this._selection));
           this._historyManager.endCommandGroup();
         } else {
           this._historyManager.executeCommand(new AddPointCommand(this._selection, mx, my));
         }
       }
-      this.draw(frame_idx);
+      this.draw(frameIdx);
     }
   }
 
@@ -383,20 +401,19 @@ class DrawCanvasClass {
     // If we're dragging a shape, move it by the amount the mouse has moved since the mouse originally clicked
     if (this.dragState && this.dragState.mode === 'body' && this._selection) {
       this._historyManager.executeCommand(new DragShapeCommand(this._selection, this.dragState, mouse));
-      this.draw(frame_idx);
+      this.draw(frameIdx);
     // If we're dragging the point of a shape, move just that point to the mouse location
     } else if (this.dragState && this.dragState.mode === 'point' && this._selection) {
       this._historyManager.executeCommand(new DragPointCommand(this._selection, this.expectResize, this.dragState, mouse))
-      this.draw(frame_idx);
+      this.draw(frameIdx);
     }
     
     if (this._selection !== null && (!this.dragState) && currentTool === 0) {
-
-      let selPoints = this._selection.getPoints(frame_idx);
+      let selPoints = this._selection.getPoints(frameIdx);
       for (var i = 0; i < selPoints.length; i++) {
         var cur = selPoints[i];
         
-        if (mouse.x >= cur.x - (mySelBoxSize) && mouse.x <= cur.x + (mySelBoxSize) &&
+        if (mouse.x >= cur.x - (mySelBoxSize) && mouse.x <= cur.x + (mySelBoxSize) && /* TODO: Check if the selection handle hitbox is too large */
             mouse.y >= cur.y -(mySelBoxSize) && mouse.y <= cur.y + (mySelBoxSize)) {
           // we found one!
           this.expectResize = i;
@@ -404,7 +421,8 @@ class DrawCanvasClass {
           return;
         }
 
-        if (this._selection.hitTest(mouse.x, mouse.y) > 0 && this.expectResize === -1) {
+        if (this._selection.hitTest(mouse.x, mouse.y) > 0) {
+          this.expectResize = -1;
           canvasContainer.style.cursor = 'all-scroll';
           return;
         }
@@ -427,7 +445,7 @@ class DrawCanvasClass {
   doUp(e) {
     this.dragState = null;
     this.expectResize = -1;
-    if (canvasContainer.style.cursor === 'grabbing') {
+    if (canvasContainer.style.cursor === 'grabbing') { /* TODO: Cursor may be incorrect */
       canvasContainer.style.cursor = 'grab';
     }
     if (this._historyManager.groupingActive) {
@@ -440,8 +458,8 @@ class DrawCanvasClass {
   }
 
   removeSelectedShape() {
-    if (this.selection) {
-      const index = this.shapes.indexOf(this.selection);
+    if (this._selection) {
+      const index = this.shapes.indexOf(this._selection);
       if (index > -1) {
         this.shapes.splice(index, 1);
         this.deSelect();
@@ -450,7 +468,7 @@ class DrawCanvasClass {
   }
 
   deSelect() {
-    this.selection = null;
+    this._selection = null;
     colorPicker.value = "#ff0000";
     colorPicker.disabled = true;
     contourLabel.disabled = true;
@@ -458,14 +476,14 @@ class DrawCanvasClass {
     contourLabel.value = "No contour selected";
     pauseButton.disabled = true;
     deleteButton.disabled = true;
-    this.draw(frame_idx);
+    this.draw(frameIdx);
   }
 
   changeSelectedShapeColor(event) {
     if (this._selection) {
       this._historyManager.executeCommand(new ColorChangeCommand(this._selection, event.target.value));
     }
-    this.draw(frame_idx);
+    this.draw(frameIdx);
   }
 
   changeSelectedShapeLabel(event) {
@@ -484,7 +502,7 @@ class DrawCanvasClass {
     if (this.selection) {
       this._historyManager.executeCommand(new ContourDeleteCommand(this, this._selection));
     }
-    this.draw(frame_idx);
+    this.draw(frameIdx);
   }
 
   getMaxNumPoints() {
@@ -510,13 +528,13 @@ class Shape {
     this._label = label;
     this._frames = {};
     this._modified = {};
-    for (var i = frame_idx; i < numFrames; i++) {
+    for (var i = frameIdx; i < numFrames; i++) {
       this._frames[i] = first_point.map(p => ({x: p.x, y: p.y}));
     }
   }
 
   addPoint(x, y) {
-    for (var i = frame_idx; i < numFrames; i++) {
+    for (var i = frameIdx; i < numFrames; i++) {
       this._frames[i].push({x: x, y: y});
     }
   }
@@ -526,7 +544,7 @@ class Shape {
   }
 
   deleteLastPoint() {
-    for (var i = frame_idx; i < numFrames; i++) {
+    for (var i = frameIdx; i < numFrames; i++) {
       this._frames[i].pop();
     }
   }
@@ -554,7 +572,7 @@ class Shape {
 
     // console.log(drawClass.selection, this)
 
-    if (drawClass.selection === this && frameIndex === frame_idx) {
+    if (drawClass.selection === this && frameIndex === frameIdx) {
       var half = mySelBoxSize / 2;
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#000000";
@@ -595,7 +613,7 @@ class Shape {
     return Math.hypot(px - (a.x + t*dx), py - (a.y + t*dy));
   }
   hitTest(mx, my, tolerance = 6) {
-    const pts = this._frames[frame_idx];
+    const pts = this._frames[frameIdx];
     if (!pts) return false;
     if (pts.length < 2) return false;
 
@@ -610,16 +628,16 @@ class Shape {
     return false;
   }
   pause() {
-    for (var i = frame_idx; i < numFrames; i++) {
+    for (var i = frameIdx; i < numFrames; i++) {
       this._frames[i] = null;
     }
     drawClass.deSelect();
-    drawClass.draw(frame_idx);
+    drawClass.draw(frameIdx);
   }
-  unpause(startPoints) {
+  unpause(startPoints) { /* TODO: Unpause button, rather than just undo/redo */
     this._frames = startPoints;
     drawClass._selection = this;
-    drawClass.draw(frame_idx);
+    drawClass.draw(frameIdx);
   }
 }
 
@@ -631,11 +649,11 @@ class CreateShapeCommand extends Command {
     this.x = x;
     this.y = y;
     this.shape = null;
-    this.frame = frame_idx;
+    this.frame = frameIdx;
   }
 
   execute() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
     switchToDraw();
@@ -653,7 +671,7 @@ class CreateShapeCommand extends Command {
   }
 
   undo() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
     drawClass.deSelect();
@@ -669,11 +687,11 @@ class AddPointCommand extends Command {
     this.shape = shape;
     this.x = x;
     this.y = y;
-    this.frame = frame_idx;
+    this.frame = frameIdx;
   }
 
   execute() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
     switchToDraw();
@@ -681,7 +699,7 @@ class AddPointCommand extends Command {
   }
 
   undo() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
     this.shape.deleteLastPoint();
@@ -692,11 +710,11 @@ class CloseShapeCommand extends Command {
   constructor(shape) {
     super();
     this.shape = shape;
-    this.frame = frame_idx;
+    this.frame = frameIdx;
   }
 
   execute() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
     this.shape.closed = true;
@@ -704,7 +722,7 @@ class CloseShapeCommand extends Command {
   }
 
   undo() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
     this.shape.closed = false;
@@ -720,17 +738,17 @@ class DragShapeCommand extends Command {
     this.dragState = dragState;
     this.mouse = mouse;
     this.modified_before = this.shape.getModified();
-    this.frame = frame_idx;
+    this.frame = frameIdx;
   }
 
   execute() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
-    this.shape.setModified(frame_idx, true);
-    for (var i = frame_idx; i < numFrames; i++) {
+    this.shape.setModified(frameIdx, true);
+    for (var i = frameIdx; i < numFrames; i++) {
       let selPoints = this.shape.getPoints(i);
-      if (!this.shape.getModified(i) || i == frame_idx) {
+      if (!this.shape.getModified(i) || i == frameIdx) {
         for (var j = 0; j < selPoints.length; j++) {
           var p = selPoints[j];
           p.x = this.dragState.startPoints[j].x + (this.mouse.x - this.dragState.startMouse.x);
@@ -741,13 +759,13 @@ class DragShapeCommand extends Command {
   }
 
   undo() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
-    this.shape.setModified(frame_idx, this.modified_before);
-    for (var i = frame_idx; i < numFrames; i++) {
+    this.shape.setModified(frameIdx, this.modified_before);
+    for (var i = frameIdx; i < numFrames; i++) {
       let selPoints = this.shape.getPoints(i);
-      if (!this.shape.getModified(i) || i == frame_idx) {
+      if (!this.shape.getModified(i) || i == frameIdx) {
         for (var j = 0; j < selPoints.length; j++) {
           var p = selPoints[j];
           p.x = this.dragState.startPoints[j].x;
@@ -766,17 +784,17 @@ class DragPointCommand extends Command {
     this.expectResize = expectResize;
     this.mouse = mouse;
     this.modified_before = this.shape.getModified();
-    this.frame = frame_idx;
+    this.frame = frameIdx;
   }
 
   execute() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
-    this.shape.setModified(frame_idx, true);
-    for (var i = frame_idx; i < numFrames; i++) {
+    this.shape.setModified(frameIdx, true);
+    for (var i = frameIdx; i < numFrames; i++) {
       let selPoints = this.shape.getPoints(i);
-      if (!this.shape.getModified(i) || i == frame_idx) {
+      if (!this.shape.getModified(i) || i == frameIdx) {
         selPoints[this.expectResize].x = this.mouse.x;
         selPoints[this.expectResize].y = this.mouse.y;
       }
@@ -784,13 +802,13 @@ class DragPointCommand extends Command {
   }
 
   undo() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
-    this.shape.setModified(frame_idx, this.modified_before);
-    for (var i = frame_idx; i < numFrames; i++) {
+    this.shape.setModified(frameIdx, this.modified_before);
+    for (var i = frameIdx; i < numFrames; i++) {
       let selPoints = this.shape.getPoints(this.frame);
-      if (!this.shape.getModified(i) || i == frame_idx) {
+      if (!this.shape.getModified(i) || i == frameIdx) {
         selPoints[this.expectResize].x = this.dragState.startPoints[this.expectResize].x;
         selPoints[this.expectResize].y = this.dragState.startPoints[this.expectResize].y;
       }
@@ -845,20 +863,20 @@ class LabelChangeCommand extends Command {
 class FramePauseCommand extends Command {
   constructor(shape) {
     super();
-    this.pause_frame = frame_idx;
+    this.pause_frame = frameIdx;
     this.shape = shape;
     this.startPoints = Object.fromEntries(Object.entries(shape.frames).map(([key, frame]) => [key, frame.map(pt => ({ ...pt }))]));
   }
 
   execute() {
-    if (this.pause_frame != frame_idx) {
+    if (this.pause_frame != frameIdx) {
       changeFrame(this.pause_frame);
     }
     this.shape.pause();
   }
 
   undo() {
-    if (this.pause_frame != frame_idx) {
+    if (this.pause_frame != frameIdx) {
       changeFrame(this.pause_frame);
     }
     this.shape.unpause(Object.fromEntries(Object.entries(this.startPoints).map(([key, frame]) => [key,frame.map(pt => ({ ...pt }))])));
@@ -870,11 +888,11 @@ class ContourDeleteCommand extends Command {
     super();
     this.drawClass = drawClass;
     this.shape = shape;
-    this.frame = frame_idx;
+    this.frame = frameIdx;
   }
 
   execute() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
     drawClass.deSelect();
@@ -884,7 +902,7 @@ class ContourDeleteCommand extends Command {
   }
 
   undo() {
-    if (this.frame != frame_idx) {
+    if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
     switchToDraw();
@@ -948,11 +966,11 @@ function initCanvasFunctionality(images, first_filename) {
 async function drawRequestedFrame() {
   // console.log(canvasContainer.offsetWidth, canvasContainer.offsetHeight)
   // console.log(bckdCanvas.width, bckdCanvas.height)
-  frameLabel.textContent = `Frame ${frame_idx+1}/${numFrames}`;
+  frameLabel.textContent = `Frame ${frameIdx+1}/${numFrames}`;
   bckdClass.clear();
   drawClass.clear();
-  bckdClass.draw(layer_idx, frame_idx);
-  drawClass.draw(frame_idx);
+  bckdClass.draw(layerIdx, frameIdx);
+  drawClass.draw(frameIdx);
 }
 
 /* Event listener & function to resize canvases with window resize */
@@ -960,7 +978,7 @@ window.addEventListener('resize', () => {
   resizeCanvases();
 }); 
 
-function resizeCanvases() {
+function resizeCanvases() { /* TODO: Shapes get moved around when the window is resized, maybe just never allow it to resize? */
   bckdCanvas.width = canvasContainer.offsetWidth;
   bckdCanvas.height = canvasContainer.offsetHeight;
   drawCanvas.width = canvasContainer.offsetWidth;
@@ -988,7 +1006,7 @@ async function downloadAll() {
   generateZipDownload(imageArray, csv);
 }
 
-async function downloadImageFrames() {
+async function downloadImageFrames() { /* TODO: Uncheck the overlay last */
   const tempCanvas = document.createElement("canvas");
   const tempCtx = tempCanvas.getContext("2d");
   const imageArray = [];
@@ -1011,8 +1029,8 @@ async function downloadImageFrames() {
     }
   }
 
-  bckdClass.draw(layer_idx, frame_idx);
-  drawClass.draw(frame_idx);
+  bckdClass.draw(layerIdx, frameIdx);
+  drawClass.draw(frameIdx);
   
   return imageArray;
 }
@@ -1037,7 +1055,7 @@ function downloadCsv() {
       if (drawClass.shapes[i].frames[j]) {
         const dataRow = [i.toString(), drawClass.shapes[i].label, drawClass.shapes[i].closed.toString(), j.toString()];
         for (var k = 0; k < numLayers; k++) {
-          dataRow.push(layer_filename_arrays[k][j]);
+          dataRow.push(layerFilenameArrays[k][j]);
         }
         for (var k = 0; k < drawClass.shapes[i].frames[j].length; k++) {
           dataRow.push(drawClass.shapes[i].frames[j][k].x);
@@ -1072,21 +1090,21 @@ async function generateZipDownload(imageArray, csv) {
 
 /* Event listener for layer picker */
 layerPicker.addEventListener("change", (event) => {
-  layer_idx = event.target.value;
-  bckdClass.draw(event.target.value, frame_idx);
+  layerIdx = event.target.value;
+  bckdClass.draw(event.target.value, frameIdx);
 })
 
 /* Event listener for overlayLast */
 
 overlayLast.addEventListener("click", () => {
-  drawClass.draw(frame_idx);
+  drawClass.draw(frameIdx);
 });
 
 /* Event listeners & functions for frame navigation */
 
 bck.addEventListener("click", () => {
-  if (frame_idx != 0) {
-    changeFrame(frame_idx - 1);
+  if (frameIdx != 0) {
+    changeFrame(frameIdx - 1);
   }
 });
 
@@ -1094,15 +1112,15 @@ document.addEventListener("keydown", (event) => {
   const keyName = event.key;
 
   if (keyName === "ArrowLeft") {
-    if (frame_idx != 0) {
-      changeFrame(frame_idx - 1);
+    if (frameIdx != 0) {
+      changeFrame(frameIdx - 1);
     }
   }
 });
 
 fwd.addEventListener("click", () => {
-  if (frame_idx < numFrames - 1) {
-    changeFrame(frame_idx + 1);
+  if (frameIdx < numFrames - 1) {
+    changeFrame(frameIdx + 1);
   }
 });
 
@@ -1110,20 +1128,20 @@ document.addEventListener("keydown", (event) => {
   const keyName = event.key;
 
   if (keyName === "ArrowRight") {
-    if (frame_idx < numFrames - 1) {
-      changeFrame(frame_idx + 1);
+    if (frameIdx < numFrames - 1) {
+      changeFrame(frameIdx + 1);
     }
   }
 });
 
-frameSlider.addEventListener("input", e => {
+frameSlider.addEventListener("input", e => { /* TODO: Change accessibility feature so it doesn't skip multiple frames? */
   changeFrame(parseInt(e.target.value));
 });
 
 function changeFrame(newFrame) {
-  frame_idx = newFrame;
-  frameSlider.value = frame_idx;
-  frameLabel.textContent = `Frame ${frame_idx+1}/${numFrames}`;
+  frameIdx = newFrame;
+  frameSlider.value = frameIdx;
+  frameLabel.textContent = `Frame ${frameIdx+1}/${numFrames}`;
   drawRequestedFrame();
 }
 
@@ -1222,13 +1240,6 @@ document.getElementById('signout_button').disabled = true;
 
 /* Load Google API client, GIS, Picker, and create picker */
 
-/*const htmlReadyPromise = new Promise((resolve) => { // Waits for DOM to load
-  window.addEventListener('DOMContentLoaded', () => {
-    init();
-    resolve();
-  });
-});*/
-
 /**
  * Callback after api.js is loaded.
  */
@@ -1303,7 +1314,7 @@ function handleSignoutClick() {
 /**
  *  Create and render a Google Picker object for searching images.
  */
-function createPicker() {
+function createPicker() { /* TODO: Show the same thing as My Drive */
   const view = new google.picker.DocsView(google.picker.ViewId.DOCS)
   .setMimeTypes('image/png,image/jpeg,image/jpg')
   .setIncludeFolders(true)        // shows folders for navigation
@@ -1348,13 +1359,13 @@ async function pickerCallback(pickerResp) {
     const images = results.map(r => r.image);
     const filenames = results.map(r => r.name);
     if (!drawClass) {
-      layer_filename_arrays.push(filenames);
+      layerFilenameArrays.push(filenames);
       initCanvasFunctionality(images, filenames[0]);
     }
     else {
       try {
         bckdClass.addLayer(images, filenames[0]);
-        layer_filename_arrays.push(filenames);
+        layerFilenameArrays.push(filenames);
       }
       catch {
         createPicker();
