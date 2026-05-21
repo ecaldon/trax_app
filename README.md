@@ -140,7 +140,7 @@ Click the Download button to download shape data and the images of your analysis
 ### 4.2. Working with the Shape Data `.csv` File
 The shape data `.csv` file contains the following variables:
 
-| Variable            | Explanation                                                                     |
+| Variable            |Explanation                                                                     |
 |---------------------|---------------------------------------------------------------------------------|
 | num                 | Numerical ID for the shape                                                      |
 | label               | User-inputted label for the shape                                               |

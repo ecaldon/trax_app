@@ -241,7 +241,6 @@ class BckdCanvasClass {
     } else {
       bckdCtx.drawImage(curImg,0,0);
     }
-
   }
 }
 
@@ -436,7 +435,7 @@ class DrawCanvasClass {
       }  
 
       // not over a selection box, return to normal
-      canvasContainer.style.cursor='auto';
+      canvasContainer.style.cursor='default';
       this.dragState = null;
       this.expectResize = -1;
     }
@@ -479,9 +478,9 @@ class DrawCanvasClass {
     this.draw(frameIdx);
   }
 
-  changeSelectedShapeColor(event) {
+  changeSelectedShapeColor(e) {
     if (this._selection) {
-      this._historyManager.executeCommand(new ColorChangeCommand(this._selection, event.target.value));
+      this._historyManager.executeCommand(new ColorChangeCommand(this._selection, e.target.value));
     }
     this.draw(frameIdx);
   }
@@ -495,7 +494,7 @@ class DrawCanvasClass {
   pauseSelectedShape() {
     if (this._selection) {
       this._historyManager.executeCommand(new FramePauseCommand(this._selection));
-    }
+    } /* TODO: Redraw the canvas? */
   }
 
   deleteSelectedShape() {
@@ -737,7 +736,7 @@ class DragShapeCommand extends Command {
     this.shape = shape;
     this.dragState = dragState;
     this.mouse = mouse;
-    this.modified_before = this.shape.getModified();
+    this.modified_before = this.shape.getModified(frameIdx);
     this.frame = frameIdx;
   }
 
@@ -779,8 +778,8 @@ class DragShapeCommand extends Command {
 class DragPointCommand extends Command {
   constructor(shape, expectResize, dragState, mouse) {
     super();
-    this.dragState = dragState;
     this.shape = shape;
+    this.dragState = dragState;
     this.expectResize = expectResize;
     this.mouse = mouse;
     this.modified_before = this.shape.getModified();
@@ -1358,6 +1357,7 @@ async function pickerCallback(pickerResp) {
     // Extract just the images into the global array
     const images = results.map(r => r.image);
     const filenames = results.map(r => r.name);
+
     if (!drawClass) {
       layerFilenameArrays.push(filenames);
       initCanvasFunctionality(images, filenames[0]);
