@@ -1,20 +1,18 @@
 /* TRAX: Web app to perform meteorological analysis through the drawing of contours */
-/* Copyright (C) 2026 Ezekiel Caldon */
 /*
-This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-*/
-/*
-  This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-*/
-/*
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, email Ezekiel Caldon, zc009026@ohio.edu.
+Copyright 2026 Ezekiel Caldon
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 /* Actual website code starts here */
 /* Global variables */
@@ -22,12 +20,15 @@ let frameIdx = 0; // Global variable to track current frame index
 let numFrames = 0;
 let layerIdx = 0; // Global variable to track current layer index
 let numLayers = 0;
+let scale;
 const layerFilenameArrays = [];
 let bckdClass;
 let drawClass;
 let currentTool = 1; // 0 = select, 1 = pen, 2 = pan
+let editingPoints = false;
 /* Global constants */
 const mySelBoxSize = 9;
+const half = mySelBoxSize / 2;
 /* HTML Objects */
 /* Top controls */
 /* Top left panel */
@@ -230,15 +231,16 @@ class BckdCanvasClass {
     this.clear();
     const curImg = this.layers[layer][frame];
     if (curImg.height > bckdCanvas.height && curImg.width > bckdCanvas.width) {
-      const scale = Math.min(bckdCanvas.width / curImg.width, bckdCanvas.height / curImg.height);
+      scale = Math.min(bckdCanvas.width / curImg.width, bckdCanvas.height / curImg.height);
       bckdCtx.drawImage(curImg, 0, 0, (curImg.width * scale), (curImg.height * scale));
     } else if (curImg.height > bckdCanvas.height) {
-      const scale = bckdCanvas.height / curImg.height;
+      scale = bckdCanvas.height / curImg.height;
       bckdCtx.drawImage(curImg, 0, 0, (curImg.width * scale), (curImg.height * scale));
     } else if (curImg.width > bckdCanvas.width) {
-      const scale = bckdCanvas.width / curImg.width;
+      scale = bckdCanvas.width / curImg.width;
       bckdCtx.drawImage(curImg, 0, 0, (curImg.width * scale), (curImg.height * scale));
     } else {
+      scale = 1;
       bckdCtx.drawImage(curImg,0,0);
     }
   }
@@ -264,6 +266,7 @@ class DrawCanvasClass {
     // State tracking
     this.dragState = null;
     this.expectResize = -1;
+    this.expectInsert = -1;
 
     // History manager
     this._historyManager = new HistoryManager();
@@ -345,6 +348,12 @@ class DrawCanvasClass {
         canvasContainer.style.cursor = 'grabbing';
         return;
       }
+
+      if (this.expectInsert !== -1) {
+        this._historyManager.executeCommand(new InsertPointCommand(this._selection, this.expectInsert));
+        this.draw(frameIdx);
+        return;
+      }
     
       // run through all the objects
       var l = this.shapes.length;
@@ -352,6 +361,7 @@ class DrawCanvasClass {
         // if the mouse pixel exists, select and break
         let selPoints = this.shapes[i].getPoints(frameIdx);
         if (this.shapes[i].hitTest(mx, my) > 0) {
+          this.deSelect();
           this._selection = this.shapes[i];
           colorPicker.disabled = false;
           colorPicker.value = this._selection.color;
@@ -409,35 +419,51 @@ class DrawCanvasClass {
     
     if (this._selection !== null && (!this.dragState) && currentTool === 0) {
       let selPoints = this._selection.getPoints(frameIdx);
+      let provPoints = this._selection.provisionalPoints;
       for (var i = 0; i < selPoints.length; i++) {
         var cur = selPoints[i];
-        
-        if (mouse.x >= cur.x - (mySelBoxSize) && mouse.x <= cur.x + (mySelBoxSize) && /* TODO: Check if the selection handle hitbox is too large */
-            mouse.y >= cur.y -(mySelBoxSize) && mouse.y <= cur.y + (mySelBoxSize)) {
+        if ((mouse.x >= (cur.x - half)) && (mouse.x <= (cur.x + half)) && 
+            (mouse.y >= (cur.y - half)) && (mouse.y <= (cur.y + half))) {
           // we found one!
           this.expectResize = i;
+          this.expectInsert = -1;
           canvasContainer.style.cursor = 'pointer';
           return;
         }
+      }
 
-        if (this._selection.hitTest(mouse.x, mouse.y) > 0) {
+      for (var i = 0; i < provPoints.length; i++) {
+        var cur = provPoints[i];
+        if ((mouse.x >= (cur.x - half)) && (mouse.x <= (cur.x + half)) && 
+            (mouse.y >= (cur.y - half)) && (mouse.y <= (cur.y + half))) {
+          // we found one!
           this.expectResize = -1;
-          canvasContainer.style.cursor = 'all-scroll';
+          this.expectInsert = i;
+          canvasContainer.style.cursor = 'pointer';
           return;
         }
       }
+
+      if (this._selection.hitTest(mouse.x, mouse.y) > 0) {
+        this.expectResize = -1;
+        this.expectInsert = -1;
+        canvasContainer.style.cursor = 'all-scroll';
+        return;
+      }
+
+      // not over a selection box, return to normal
+      this.dragState = null;
+      this.expectResize = -1;
+      this.expectInsert = -1;
 
       for (var i = 0; i < this.shapes.length; i++) {
         if (this.shapes[i].hitTest(mouse.x, mouse.y) > 0) {
           canvasContainer.style.cursor = 'pointer';
           return;
         }
-      }  
+      }
 
-      // not over a selection box, return to normal
       canvasContainer.style.cursor='default';
-      this.dragState = null;
-      this.expectResize = -1;
     }
   }
 
@@ -449,6 +475,18 @@ class DrawCanvasClass {
     }
     if (this._historyManager.groupingActive) {
       this._historyManager.endCommandGroup();
+    }
+  }
+
+  doDoubleClick(e) {
+    var pos = this.getPos(e);
+    var mx = pos.x;
+    var my = pos.y;
+    if (currentTool === 0) {
+      if (this._selection.hitTest(mx, my) > 0) {
+        this._selection.setUpProvisionalPoints();
+        this.draw(frameIdx);
+      }
     }
   }
 
@@ -467,7 +505,11 @@ class DrawCanvasClass {
   }
 
   deSelect() {
+    if (this._selection) {
+      this._selection.deactivateProvisionalPoints();
+    }
     this._selection = null;
+    
     colorPicker.value = "#ff0000";
     colorPicker.disabled = true;
     contourLabel.disabled = true;
@@ -527,6 +569,7 @@ class Shape {
     this._label = label;
     this._frames = {};
     this._modified = {};
+    this._provisionalPoints = [];
     for (var i = frameIdx; i < numFrames; i++) {
       this._frames[i] = first_point.map(p => ({x: p.x, y: p.y}));
     }
@@ -538,8 +581,20 @@ class Shape {
     }
   }
 
+  insertPoint(insIdx) {
+    for (var i = frameIdx; i < numFrames; i++) {
+      this._frames[i].splice(insIdx+1, 0, this._provisionalPoints[insIdx]);
+    }
+  }
+
   getModified(frame) {
     return this._modified[frame];
+  }
+
+  deletePoint(idx) {
+    for (var i = frameIdx; i < numFrames; i++) {
+      this._frames[i].splice(idx, 1);
+    }
   }
 
   deleteLastPoint() {
@@ -556,7 +611,37 @@ class Shape {
     this._modified[frame] = condition;
   }
 
+  setUpProvisionalPoints() {
+    if (!editingPoints) {
+      var lengthSubtract;
+      editingPoints = true;
+      if (!this._closed) {
+        lengthSubtract = 1;
+      } else {
+        lengthSubtract = 0;
+      }
+      for (var i = 0; i < this._frames[frameIdx].length-lengthSubtract; i++) {
+        var p1 = this._frames[frameIdx][i];
+        var p2 = this._frames[frameIdx][(i+1)%(this._frames[frameIdx].length)];
+        if (Math.sqrt((p2.x-p1.x)**2 + (p2.y-p1.y)**2) > 18) {
+          this._provisionalPoints.push({x:((p1.x + p2.x) / 2), y:((p1.y + p2.y) / 2)});
+        }
+      }
+    }
+  }
+
+  deactivateProvisionalPoints() {
+    this._provisionalPoints = [];
+    editingPoints = false;
+  }
+
+  resetProvisionalPoints() {
+    this.deactivateProvisionalPoints();
+    this.setUpProvisionalPoints();
+  }
+
   draw(ctx, frameIndex) {
+
     if (this._frames[frameIndex] === undefined || this._frames[frameIndex] === null) return; // If this shape doesn't exist in the current frame, don't draw it
     ctx.strokeStyle = this._color;
     ctx.lineWidth = 4;
@@ -571,8 +656,20 @@ class Shape {
 
     // console.log(drawClass.selection, this)
 
+    if (drawClass.selection === this && editingPoints === true) {
+      ctx.globalAlpha = 0.5
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 1;
+      for (var i = 0; i < this._provisionalPoints.length; i++) {
+        var p = this._provisionalPoints[i];
+        ctx.fillRect(p.x - half, p.y - half, mySelBoxSize, mySelBoxSize);
+        ctx.strokeRect(p.x - half, p.y - half, mySelBoxSize, mySelBoxSize);
+      }
+      ctx.globalAlpha = 1;
+    }
+
     if (drawClass.selection === this && frameIndex === frameIdx) {
-      var half = mySelBoxSize / 2;
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#000000";
       ctx.lineWidth = 1;
@@ -605,6 +702,9 @@ class Shape {
   }
   get frames() {
     return this._frames;
+  }
+  get provisionalPoints() {
+    return this._provisionalPoints;
   }
   distToSegment(px, py, a, b) {
     const dx = b.x - a.x, dy = b.y - a.y;
@@ -705,6 +805,31 @@ class AddPointCommand extends Command {
   }
 }
 
+class InsertPointCommand extends Command {
+  constructor(shape, insIdx) {
+    super();
+    this.shape = shape;
+    this.insIdx = insIdx;
+    this.frame = frameIdx;
+  }
+
+  execute() {
+    if (this.frame != frameIdx) {
+      changeFrame(this.frame);
+    }
+    this.shape.insertPoint(this.insIdx);
+    this.shape.resetProvisionalPoints();
+  }
+
+  undo() {
+    if (this.frame != frameIdx) {
+      changeFrame(this.frame);
+    }
+    this.shape.deletePoint(this.insIdx+1);
+    this.shape.resetProvisionalPoints();
+  }
+}
+
 class CloseShapeCommand extends Command {
   constructor(shape) {
     super();
@@ -755,6 +880,9 @@ class DragShapeCommand extends Command {
         }
       }
     }
+    if (this.shape.provisionalPoints.length > 0) {
+      this.shape.resetProvisionalPoints();
+    }
   }
 
   undo() {
@@ -771,6 +899,9 @@ class DragShapeCommand extends Command {
           p.y = this.dragState.startPoints[j].y;
         }
       }
+    }
+    if (this.shape.provisionalPoints.length > 0) {
+      this.shape.resetProvisionalPoints();
     }
   }
 }
@@ -794,9 +925,20 @@ class DragPointCommand extends Command {
     for (var i = frameIdx; i < numFrames; i++) {
       let selPoints = this.shape.getPoints(i);
       if (!this.shape.getModified(i) || i == frameIdx) {
-        selPoints[this.expectResize].x = this.mouse.x;
-        selPoints[this.expectResize].y = this.mouse.y;
+        if (this.expectResize == 0 || this.expectResize == selPoints.length-1) {
+          selPoints[0].x = this.mouse.x;
+          selPoints[selPoints.length-1].x = this.mouse.x;
+          selPoints[0].y = this.mouse.y;
+          selPoints[selPoints.length-1].y = this.mouse.y;
+        } else {
+          selPoints[this.expectResize].x = this.mouse.x;
+          selPoints[this.expectResize].y = this.mouse.y;
+        }
+        
       }
+    }
+    if (this.shape.provisionalPoints.length > 0) {
+      this.shape.resetProvisionalPoints();
     }
   }
 
@@ -811,6 +953,9 @@ class DragPointCommand extends Command {
         selPoints[this.expectResize].x = this.dragState.startPoints[this.expectResize].x;
         selPoints[this.expectResize].y = this.dragState.startPoints[this.expectResize].y;
       }
+    }
+    if (this.shape.provisionalPoints.length > 0) {
+      this.shape.resetProvisionalPoints();
     }
   }
 }
@@ -959,6 +1104,10 @@ function initCanvasFunctionality(images, first_filename) {
     if (e.targetTouches.length > 0) drawClass.doUp(e.targetTouches[0]);
     e.preventDefault();
   }, true);
+
+  drawCanvas.addEventListener('dblclick', function(e) {
+    drawClass.doDoubleClick(e);
+  }, true);
 }
 
 /* Method to redraw the canvases based on the current global frame index and layer index. Called whenever we change frames or layers */
@@ -974,7 +1123,7 @@ async function drawRequestedFrame() {
 
 /* Event listener & function to resize canvases with window resize */
 window.addEventListener('resize', () => {
-  resizeCanvases();
+  /* resizeCanvases(); Temporarily disabled, need to find way for shapes to adjust in addition to canvas */
 }); 
 
 function resizeCanvases() { /* TODO: Shapes get moved around when the window is resized, maybe just never allow it to resize? */
@@ -985,8 +1134,38 @@ function resizeCanvases() { /* TODO: Shapes get moved around when the window is 
   drawRequestedFrame();
 }
 
-/* Event listeners and functions for top-left non-Google functions (undo/redo, download) */
+document.addEventListener("keydown", (event) => {
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.target.matches("input, textarea, select")) return;
 
+  switch (event.key) {
+    case "z": drawClass.historyManager.undo(); break;
+    case "y": drawClass.historyManager.redo(); break;
+    case "Escape": deSelect(); break;
+    case "ArrowLeft": if (frameIdx != 0) changeFrame(frameIdx - 1); break;
+    case "ArrowRight": if (frameIdx < numFrames - 1) changeFrame(frameIdx + 1); break;
+    case "ArrowUp": 
+      event.preventDefault();
+      layerIdx--;
+      layerPicker.selectedIndex = layerIdx;
+      bckdClass.draw(layerIdx, frameIdx);
+      break;
+    case "ArrowDown":
+      event.preventDefault();
+      layerIdx++;
+      layerPicker.selectedIndex = layerIdx;
+      bckdClass.draw(layerIdx, frameIdx);
+      break;
+    case "s": 
+      event.preventDefault();
+      switchToSelect();
+      break;
+    case "d": switchToDraw(); break;
+    case "Enter": if (currentTool === 1 && drawClass.selection) switchToSelect(); break;
+  }
+});
+
+/* Event listeners and functions for top-left non-Google functions (undo/redo, download) */
 undo.addEventListener("click", () => {
   drawClass.historyManager.undo();
 });
@@ -1035,6 +1214,12 @@ async function downloadImageFrames() { /* TODO: Uncheck the overlay last */
 }
 
 function downloadCsv() {
+  let csvContent = "";
+
+  const metaRow = ["META", "scale_factor", scale]
+  let row = metaRow.join(",");
+  csvContent += row + "\r\n";
+
   const headerRow = ["num", "label", "closed", "frame_num"]
   for (var i = 0; i < numLayers; i++) {
     headerRow.push("layer_" + (i+1).toString() + "_filename");
@@ -1044,9 +1229,7 @@ function downloadCsv() {
     headerRow.push("coord_" + ((i+1).toString() + "_y"));
   }
 
-  let csvContent = "";
-
-  let row = headerRow.join(",");
+  row = headerRow.join(",");
   csvContent += row + "\r\n";
 
   for (var i = 0; i < drawClass.shapes.length; i++) {
@@ -1107,29 +1290,9 @@ bck.addEventListener("click", () => {
   }
 });
 
-document.addEventListener("keydown", (event) => {
-  const keyName = event.key;
-
-  if (keyName === "ArrowLeft") {
-    if (frameIdx != 0) {
-      changeFrame(frameIdx - 1);
-    }
-  }
-});
-
 fwd.addEventListener("click", () => {
   if (frameIdx < numFrames - 1) {
     changeFrame(frameIdx + 1);
-  }
-});
-
-document.addEventListener("keydown", (event) => {
-  const keyName = event.key;
-
-  if (keyName === "ArrowRight") {
-    if (frameIdx < numFrames - 1) {
-      changeFrame(frameIdx + 1);
-    }
   }
 });
 
@@ -1143,16 +1306,6 @@ function changeFrame(newFrame) {
   frameLabel.textContent = `Frame ${frameIdx+1}/${numFrames}`;
   drawRequestedFrame();
 }
-
-document.addEventListener("keydown", (event) => {
-  const keyName = event.key;
-
-  if (keyName === "Enter") {
-    if (currentTool === 1 && drawClass.selection) {
-      switchToSelect();
-    }
-  }
-});
 
 function switchToSelect() {
   currentTool = 0;

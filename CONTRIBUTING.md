@@ -8,10 +8,10 @@
 ## Code structure & key design concepts
 > This section will take you through the JavaScript code in the order of the code top to bottom, which is not necessarily the order the user will interact with the website. The HTML and CSS files are fairly self-explanatory and relevant components are treated a few times in the JavaScript section.
 
-### [Video of Zeke Caldon & Dr. Aryeh Drager discussing the code of the app and next steps for new features](https://drive.google.com/file/d/1iFfsYyUoeDq1R3v5QEnazqOYNRc8V3zr/view?usp=sharing)
+### [Video of Zeke Caldon & Dr. Aryeh Drager from May 2026 discussing the code of the app and next steps for new features](https://drive.google.com/file/d/1iFfsYyUoeDq1R3v5QEnazqOYNRc8V3zr/view?usp=sharing)
 
 ### Global variables
-There are eight global objects that are used across the JavaScript file:
+There are nine global objects that are used across the JavaScript file:
 - `frameIdx`: The current frame being displayed
 - `numFrames`: The total number of frames loaded into the app
 - `layerIdx`: The current map layer being displayed
@@ -20,6 +20,7 @@ There are eight global objects that are used across the JavaScript file:
 - `bckdClass`: The `bckdCanvasClass` that is used for this session.
 - `drawClass`: The `drawCanvasClass` that is used for this session.
 - `currentTool`: The current drawing tool selected by the user. (0 is the select <span>&#8598;</span> tool, 1 is the pen <span>&#10002;</span> tool, and 2 is the pan <span>&#10021;</span> tool)
+- `editingPoints`: Boolean of if the user has a shape that is in the editing points state (transparent midpoints of segments shown).
 
 ### Global constants
 `mySelBoxSize`: The size of selection box handles throughout the canvas interface in px.
@@ -174,6 +175,12 @@ Handles the action of a user releasing from clicking (or tapping on mobile).
 - Sets the cursor to the correct style for the new context of not being clicked/tapped.
 - Ends the current command group.
 
+**`doDoubleClick(e)`**
+
+Handles the action of a user double clicking to show the transparent midpoints of segments (a.k.a., provisional points), if appropriate.
+
+If the current tool is <span>&#8598;</span> and the hit test is `true` for `this._selection`, call `setUpProvisionalPoints()` for `this._selection` and redraws the canvas.
+
 **`addShape(shape)`**
 
 Pushes the specified `shape` object to `this.shapes`.
@@ -218,13 +225,20 @@ Returns the maximum number of points for all shapes across all frames to determi
 - `this._label`: Value of the shape's label.
 - `this._frames`: Array of arrays representing the shape's points on each frame. For example, the first element of `this._frames` would be an array of the shape's points on frame 1.
 - `this._modified`: Array representing whether the shape's state was modified on each frame. This ensures that user modifications to the shape only carry forward to future frames that have not been modified.
+- `this._provisionalPoints`: Array representing any transparent ("provisional") points to be displayed when the user double-clicks on the shape to add points.
 - The constructor finally adds the first point of the shape specified by the `first_point` parameter to all future frames.
 
 #### `addPoint(x, y)`
 Adds the specified point to the current and all future frames.
 
+#### `insertPoint(insIdx)`
+Inserts a point after the specified index, `insIdx`, to the current and all future frames.
+
 #### `getModified(frame)`
 Returns a boolean of whether the shape was modified on the specified `frame`.
+
+#### `deletePoint(idx)`
+Splices out the point at the specified index, `idx`, from the current and all future frames.
 
 #### `deleteLastPoint()`
 Pops the last point of the shape from the current and all future frames.
@@ -234,6 +248,21 @@ Returns the points array for the specified `frame`.
 
 #### `setModified(frame, condition)`
 Sets the boolean for whether the shape was modified on the specified `frame` to the specified `condition`.
+
+#### `setUpProvisionalPoints()`
+Populates the `this._provisionalPoints` array to prepare for drawing transparent points when the user double-clicks.
+
+- If `editingPoints` is not true (i.e., the shape is not yet showing transparent points):
+  - Set `editingPoints` to `true`.
+  - Check if the shape is closed. If it is not, we take this into account so when we loop over the points of the shape, we don't add a provisional point between the last and first points of the shape.
+  - For each point of the shape (minus one if it isn't closed):
+    - Push the midpoint between this and the next point to `this._provisionalPoints`.
+
+#### `deactivateProvisionalPoints()`
+Depopulate the `this._provisionalPoints` array and set `editingPoints` to `false`.
+
+#### `resetProvisionalPoints()`
+Reset the provisional points to account for shape changes by calling `this.deactivateProvisionalPoints()` and `this.setUpProvisionalPoints()`.
 
 #### `draw(ctx, frameIndex)`
 > This method also draws heavily from code from Simon Sarris's work and requires sufficient knowledge of the Canvas API. Refer to those resources for help with understanding concepts relating to the drawing context functionality.
@@ -299,6 +328,20 @@ Change the frame to `this.frame`, switch to the draw tool, and add the point to 
 
 Change the frame to `this.frame` and delete the last point of the shape by using the `Shape.deleteLastPoint()` method.
 
+#### `InsertPointCommand`
+*`constructor(shape, insIdx)`*
+- `this.shape`: Shape object for the point to be inserted into
+- `this.insIdx`: Index for the point to be inserted after
+- `this.frame`: Frame the point was inserted into the shape
+
+*`execute()`*
+
+Change the frame to `this.frame`, insert the point by using the `Shape.insertPoint()` method, and reset the provisional points for the shape.
+
+*`undo()`*
+
+Change the frame to `this.frame` delete the point by using the `Shape.deletePoint()` method, and reset the provisional points for the shape.
+
 #### `CloseShapeCommand`
 *`constructor(shape)`*
 - `this.shape`: Shape object being closed
@@ -325,11 +368,13 @@ Change the frame to `this.frame`, set `this.shape.closed` to `false`, make the s
 - Change the frame to `this.frame`.
 - Set the shape's modified state for this frame to `true`.
 - For the current and all future frames, if the shape was not modified on the frame or it is the current frame, set all its points so they are the same distance from their respective points on the shape before the drag action (`this.dragState.startPoints`) than the mouse is from its starting position in the drag action (`this.dragState.startMouse`).
+- If the shape has provisional points, reset them.
   
 *`undo()`*
 - Change the frame to `this.frame`.
 - Set the shape's modified state for this frame to `this.modified_before` (i.e., if this shape's `modified` state was `false` before, change it back to `false`, otherwise keep it `true`)
 - For the current and all future frames, if the shape was not modified on the frame or it is the current frame, set all its points to their respective points on the shape before the drag action (`this.dragState.startPoints`).
+- If the shape has provisional points, reset them.
 
 #### `DragPointCommand`
 *`constructor(shape, expectResize, dragState, mouse)`*
@@ -345,11 +390,13 @@ Change the frame to `this.frame`, set `this.shape.closed` to `false`, make the s
 - Change the frame to `this.frame`.
 - Set the shape's modified state for this frame to `true`.
 - For the current and all future frames, if the shape was not modified on the frame or it is the current frame, set the point being moved to the mouse's position.
+- If the shape has provisional points, reset them.
   
 *`undo()`*
 - Change the frame to `this.frame`.
 - Set the shape's modified state for this frame to `this.modified_before` (i.e., if this shape's `modified` state was `false` before, change it back to `false`, otherwise keep it `true`)
 - For the current and all future frames, if the shape was not modified on the frame or it is the current frame, set all its points to their respective points on the shape before the drag action (`this.dragState.startPoints`).
+- If the shape has provisional points, reset them.
 
 #### `ColorChangeCommand`
 *`constructor(shape, newColor)`*

@@ -10,7 +10,9 @@ The application uses Google Drive to upload images into the map canvas. This all
 
 A sign in window will pop up prompting you to sign into Google Drive. You may need to unblock pop-ups in your browser for the TRAX website for this to properly display. The first time you sign in, Google will ask you to allow TRAX to access your Google Drive data. TRAX will never use or save your Google Drive data for anything other than displaying images in the canvas.
 
-![Google sign-in prompt](readme_imgs/1.1.1.png)
+<div align="center">
+    <img src="readme_imgs/1.1.1.png" alt="Google Identification Window" height=400 style="margin:auto"/>
+</div>
 
 > <span style="color:rgb(172, 172, 0)">Currently, access to the Google Drive API that makes the app functional is only available to a limited number of people. Contact [Zeke Caldon](mailto:ecaldon@oswego.edu) to request access. The first time you sign in, Google will prompt you that the app has not been verified by Google yet. Click "Continue" to access the app.
 
@@ -27,21 +29,21 @@ Once you sign in by completing the previous step, the interface will launch the 
 
 ![The Google Drive Picker interface](/readme_imgs/1.1.2.png)
 
-There is a search bar to find specific files or directories. <img src="readme_imgs/icons/hamburger.png" alt="drawing" height="14"/> switches to a list view. <img src="readme_imgs/icons/sort.png" alt="drawing" height="14"/> gives different options for sorting images and directories. In the list view, you can also sort by clicking on the column headers.
+There is a search bar to find specific files or directories. <img src="readme_imgs/icons/hamburger.png" alt="hamburger button" height="14"/> switches to a list view. <img src="readme_imgs/icons/sort.png" alt="sort button" height="14"/> gives different options for sorting images and directories. In the list view, you can also sort by clicking on the column headers.
 
 <p> You can select multiple consecutive files by holding &#8679; while selecting files, or select multiple non-consecutive files by holding the "option" key. </p>
 
 > <span style="color:rgb(172, 172, 0)">The Google Drive picker interface is not intended for users using tablets or smartphones. In the future, an interface more suitable for selecting multiple files on these devices is desirable to allow these users to enjoy the full functionality of the TRAX app.</span>
 
-When you have your selected files, click <img src="readme_imgs/icons/select.png" alt="drawing" height="14"/> to load the images into the drawing canvas.
+When you have your selected files, click <img src="readme_imgs/icons/select.png" alt="Select button" height="14"/> to load the images into the drawing canvas.
 
 ## 2. The Drawing Interface & Drawing Contours
 ### 2.1. The Interface
 ![The TRAX interface](/readme_imgs/2.1.1.png)
 
 #### 1. Undo/Redo, Google Drive Upload/Sign Out, Download
-- <span>&#8634;</span>: Undoes the previous drawing or contour edit action.
-- <span>&#8635;</span>: Redoes any undone drawing or contour edit action.
+- <span>&#8634;</span>: Undoes the previous drawing or contour edit action. (Can also be done by pressing "Z")
+- <span>&#8635;</span>: Redoes any undone drawing or contour edit action. (Can also be done by pressing "Y")
 - Upload: Upload a new layer of map images from Google Drive Picker.
 - Download: Download a .zip file of the .pngs of all frames of the drawing canvas, and a .csv of all shapes.
 - Sign Out: Sign out of your Google Account.
@@ -58,8 +60,8 @@ When you have your selected files, click <img src="readme_imgs/icons/select.png"
 - Displays and allows drawing and editing of contours
 
 #### 5. Drawing Tools
-- <span>&#8598;</span>: Select tool – Allows the selection and manipulation of contours and their points.
-- <span>&#10002;</span>: Pen tool – Allows the creation of a new contour by making the points of the line or closed shape.
+- <span>&#8598;</span>: Select tool – Allows the selection and manipulation of contours and their points. (can be selcted by pressing "S")
+- <span>&#10002;</span>: Pen tool – Allows the creation of a new contour by making the points of the line or closed shape. (can be selected by pressing "D")
 - <span>&#10021;</span>: Pan tool – <span style="color:rgb(172, 172, 0)">Not yet developed! Doesn't do anything yet!</span>
 
 #### 6. Overlay Last Checkbox
@@ -80,7 +82,7 @@ When you have your selected files, click <img src="readme_imgs/icons/select.png"
 #### 3. Press the Enter/Return key or click on the first point to finish drawing the shape. The selected tool will change to <span>&#8598;</span>.
 ![Drawing on the canvas](/readme_imgs/2.2.1.png)
 
-> If you make a mistake at any time, you can click the <span>&#8634;</span> button to undo your last drawing action.
+> If you make a mistake at any time, you can click the <span>&#8634;</span> button or press "Z" to undo your last drawing action.
 
 ### 2.3. Editing a Contour's Shape, Appearance, and Name
 Once you have drawn a contour, you can make edits, including dragging the contour, its points, and changing its color and label. To edit a contour, click on it in <span>&#8598;</span> mode. White bounding boxes over its points will appear. This means the contour is selected.
@@ -97,12 +99,17 @@ Click on the colored box in the Contour Editor. Select a color and press the Ent
 #### Changing the label of a contour
 Click or focus on the "Enter a label..." text box in the Contour Editor. Type the name you want to give the selected contour and press the Enter/Return key to change the name of the selected contour. This name will appear in the .csv export and is the same across *all frames*.
 
-> Again, if you make a mistake at any time, you can click the <span>&#8634;</span> button to undo any of the above actions.
+> Again, if you make a mistake at any time, you can click the <span>&#8634;</span> button or press "Z" to undo any of the above actions.
 
-### 2.4. Deleting a Contour
+### 2.4. Adding Points to a Contour
+You can also add points to a contour by double clicking on the contour. This will cause the midpoints of each segment of the contour to show transparent points which can be added to the contour by clicking on them.
+
+> This action can be undone by clicking the <span>&#8634;</span> button or pressing "Z".
+
+### 2.5. Deleting a Contour
 With a contour selected, click the <span>&#10006;</span> button to delete a contour across *all frames*.
 
-> This action can be undone by clicking the <span>&#8634;</span> button.
+> This action can be undone by clicking the <span>&#8634;</span> button or pressing "Z".
 
 ## 3. Navigating Through Multiple Frames & Map Layers
 ### 3.1. Changing Frames
