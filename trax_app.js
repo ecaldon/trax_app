@@ -21,42 +21,77 @@ limitations under the License.
  * frames/layers, with full undo/redo via the Command pattern, and export
  * the result as a CSV + zipped image bundle.
  *
- * See docs/ARCHITECTURE.md for design rationale (why Canvas, why Command
- * pattern, the frames/layers/shapes data model, and known gotchas). This
- * file's doc comments are the source of truth for individual class/method
- * behavior — run `jsdoc` to generate a browsable reference.
+ * See docs/ARCHITECTURE.md for design overview and rationale. This
+ * file's doc comments describe individual class/method
+ * behavior. You can run `jsdoc` to generate a browsable reference. #TODO: Leave the link to docs here?
  */
 
 /* Actual website code starts here */
 
 /* Global variables */
 
-/** @type {number} Index of the frame currently being displayed. */
+/**
+ * Index of the frame currently being displayed.
+ * @type {number}
+ */
 let frameIdx = 0;
-/** @type {number} Total number of frames loaded into the app. */
+/**
+ * Total number of frames loaded into the app.
+ * @type {number}
+ */
 let numFrames = 0;
-/** @type {number} Index of the map layer currently being displayed. */
+/**
+ * Index of the map layer currently being displayed.
+ * @type {number}
+ */
 let layerIdx = 0;
-/** @type {number} Total number of layers loaded into the app. */
+/**
+ * Total number of layers loaded into the app.
+ * @type {number}
+ */
 let numLayers = 0;
-/** @type {number} Scale factor the current background image was drawn at, relative to its native size. Recorded in exported CSV metadata so coordinates can be mapped back to original image pixels. */
+/**
+ * Scale factor the current background image was drawn at, relative to its native size. Recorded in exported CSV metadata so coordinates can be mapped back to original image pixels.
+ * @type {number}
+ */
 let scale;
-/** @type {string[][]} Array of arrays of image filenames, one inner array per layer, used to label exported CSV rows. */
+/**
+ * Array of arrays of image filenames, one inner array per layer, used to label exported CSV rows.
+ * @type {string[][]}
+ */
 const layerFilenameArrays = [];
-/** @type {BckdCanvasClass} The background-canvas controller for this session. */
+/**
+ * The background-canvas controller for this session.
+ * @type {BckdCanvasClass}
+ */
 let bckdClass;
-/** @type {DrawCanvasClass} The drawing-canvas controller for this session. */
+/**
+ * The drawing-canvas controller for this session.
+ * @type {DrawCanvasClass}
+ */
 let drawClass;
-/** @type {number} The drawing tool currently selected: 0 = select, 1 = pen, 2 = pan. */
+/**
+ * The drawing tool currently selected: 0 = select, 1 = pen, 2 = pan.
+ * @type {number}
+ */
 let currentTool = 1;
-/** @type {boolean} Whether the currently selected shape is showing transparent "provisional" midpoint markers for point insertion. */
+/**
+ * Whether the currently selected shape is showing transparent "provisional" midpoint markers for point insertion.
+ * @type {boolean}
+ */
 let editingPoints = false;
 
 /* Global constants */
 
-/** @type {number} Side length, in px, of the selection/provisional-point handle squares drawn on the canvas. */
+/**
+ * Side length, in px, of the selection/provisional-point handle squares drawn on the canvas.
+ * @type {number}
+ */
 const mySelBoxSize = 9;
-/** @type {number} Half of {@link mySelBoxSize}; used to center handle squares on their point coordinate. */
+/**
+ * Half of {@link mySelBoxSize}; used to center handle squares on their point coordinate.
+ * @type {number}
+ */
 const half = mySelBoxSize / 2;
 
 /* HTML Objects */
@@ -150,7 +185,10 @@ class Command {
  */
 class CommandGroup {
   constructor() {
-    /** @type {Command[]} Commands belonging to this group, in execution order. */
+    /**
+     * Commands belonging to this group, in execution order.
+     * @type {Command[]}
+     */
     this.commands = [];
   }
 
@@ -183,15 +221,30 @@ class CommandGroup {
  */
 class HistoryManager {
   constructor() {
-    /** @type {(Command|CommandGroup)[]} Commands executed, oldest first. */
+    /**
+     * Commands executed, oldest first.
+     * @type {Array<Command|CommandGroup>}
+     */
     this.history = [];
-    /** @type {(Command|CommandGroup)[]} Commands undone, available to redo. */
+    /**
+     * Commands undone, available to redo.
+     * @type {Array<Command|CommandGroup>}
+     */
     this.redoStack = [];
-    /** @type {number} Maximum number of history entries kept before the oldest is dropped. */
+    /**
+     * Maximum number of history entries kept before the oldest is dropped.
+     * @type {number}
+     */
     this.maxHistorySize = 100; /* TODO: See what the greatest size without crashing the program could be */
-    /** @type {boolean} Whether commands are currently being collected into {@link HistoryManager#currentCommandGroup} instead of pushed to history individually. */
+    /**
+     * Whether commands are currently being collected into {@link HistoryManager#currentCommandGroup} instead of pushed to history individually.
+     * @type {boolean}
+     */
     this.groupingActive = false;
-    /** @type {CommandGroup|null} The command group currently being built, if grouping is active. */
+    /**
+     * The command group currently being built, if grouping is active.
+     * @type {CommandGroup|null}
+     */
     this.currentCommandGroup = null;
   }
 
@@ -302,7 +355,10 @@ class BckdCanvasClass {
    * @param {string} first_filename - Filename of the first image, shown in the layer picker.
    */
   constructor(images, first_filename) {
-    /** @type {HTMLImageElement[][]} Array of per-layer image arrays. */
+    /**
+     * Array of per-layer image arrays.
+     * @type {HTMLImageElement[][]}
+     */
     this.layers = [];
     this.layers.push(images);
     numFrames = images.length;
@@ -391,21 +447,33 @@ class DrawCanvasClass {
     this.htmlLeft = html.offsetLeft;
 
     // Shape objects
-    /** @type {Shape[]} All shapes created in this session. */
+    /**
+     * All shapes created in this session.
+     * @type {Shape[]}
+     */
     this._shapes = [];
-    /** @type {Shape|null} The currently selected shape, or null if none. */
+    /**
+     * The currently selected shape, or null if none.
+     * @type {Shape|null}
+     */
     this._selection = null;
 
     // State tracking
     /**
-     * @type {?{mode: 'body'|'point', startMouse?: {x:number,y:number}, startPoints: {x:number,y:number}[]}}
      * Info about an in-progress drag, or null if the user isn't dragging.
      * `mode: 'body'` = dragging the whole shape; `mode: 'point'` = dragging a single selection handle.
+     * @type {{mode: 'body'|'point', startMouse: {x: number, y: number}, startPoints: Array<{x: number, y: number}>}|null}
      */
     this.dragState = null;
-    /** @type {number} Index of the selection handle the cursor is hovering, or -1 if none. */
+    /**
+     * Index of the selection handle the cursor is hovering, or -1 if none.
+     * @type {number}
+     */
     this.expectResize = -1;
-    /** @type {number} Index into the selected shape's provisional points that the cursor is hovering, or -1 if none. */
+    /**
+     * Index into the selected shape's provisional points that the cursor is hovering, or -1 if none.
+     * @type {number}
+     */
     this.expectInsert = -1;
 
     // History manager
@@ -413,7 +481,10 @@ class DrawCanvasClass {
     this._historyManager = new HistoryManager();
   }
 
-  /** @type {Shape|null} The currently selected shape. */
+  /**
+   * The currently selected shape.
+   * @type {Shape|null}
+   */
   get selection() {
     return this._selection;
   }
@@ -427,7 +498,10 @@ class DrawCanvasClass {
     return this._historyManager;
   }
 
-  /** @type {Shape[]} All shapes in this session. */
+  /**
+   * All shapes in this session.
+   * @type {Shape[]}
+   */
   get shapes() {
     return this._shapes;
   }
@@ -791,7 +865,7 @@ class DrawCanvasClass {
  */
 class Shape {
   /**
-   * @param {{x:number,y:number}[]} first_point - Initial point(s) the shape starts with.
+   * @param {Array<{x: number, y: number}>} first_point - Initial point(s) the shape starts with.
    * @param {boolean} closed - Whether the shape is a closed polygon (true) or open contour (false).
    * @param {string} color - CSS color string for the shape's stroke.
    * @param {string} label - User-facing label for the shape.
@@ -800,11 +874,20 @@ class Shape {
     this._closed = closed;
     this._color = color;
     this._label = label;
-    /** @type {Object<number, {x:number,y:number}[]>} Map of frame index -> array of points on that frame. */
+    /**
+     * Map of frame index -> array of points on that frame.
+     * @type {Object<number, Array<{x: number, y: number}>>}
+     */
     this._frames = {};
-    /** @type {Object<number, boolean>} Map of frame index -> whether the shape was explicitly modified on that frame. */
+    /**
+     * Map of frame index -> whether the shape was explicitly modified on that frame.
+     * @type {Object<number, boolean>}
+     */
     this._modified = {};
-    /** @type {{x:number,y:number}[]} Transparent midpoint markers shown when editing points; see {@link Shape#setUpProvisionalPoints}. */
+    /**
+     * Transparent midpoint markers shown when editing points; see {@link Shape#setUpProvisionalPoints}.
+     * @type {Array<{x: number, y: number}>}
+     */
     this._provisionalPoints = [];
     for (var i = frameIdx; i < numFrames; i++) {
       this._frames[i] = first_point.map(p => ({x: p.x, y: p.y}));
@@ -869,7 +952,7 @@ class Shape {
 
   /**
    * @param {number} frame
-   * @returns {{x:number,y:number}[]|undefined} The shape's points on the given frame.
+   * @returns {Array<{x: number, y: number}>|undefined} The shape's points on the given frame.
    */
   getPoints(frame) {
     return this._frames[frame];
@@ -979,32 +1062,47 @@ class Shape {
     }
   }
 
-  /** @type {boolean} Whether the shape is a closed polygon. */
+  /**
+   * Whether the shape is a closed polygon.
+   * @type {boolean}
+   */
   get closed() {
     return this._closed;
   }
   set closed(val) {
     this._closed = val;
   }
-  /** @type {string} The shape's stroke color. */
+  /**
+   * The shape's stroke color.
+   * @type {string}
+   */
   get color() {
     return this._color;
   }
   set color(val) {
     this._color = val;
   }
-  /** @type {string} The shape's user-facing label. */
+  /**
+   * The shape's user-facing label.
+   * @type {string}
+   */
   get label() {
     return this._label;
   }
   set label(val) {
     this._label = val;
   }
-  /** @type {Object<number, {x:number,y:number}[]>} Per-frame point map. */
+  /**
+   * Per-frame point map.
+   * @type {Object<number, Array<{x: number, y: number}>>}
+   */
   get frames() {
     return this._frames;
   }
-  /** @type {{x:number,y:number}[]} Current provisional midpoint markers. */
+  /**
+   * Current provisional midpoint markers.
+   * @type {Array<{x: number, y: number}>}
+   */
   get provisionalPoints() {
     return this._provisionalPoints;
   }
@@ -1014,8 +1112,8 @@ class Shape {
    * segment from a to b.
    * @param {number} px
    * @param {number} py
-   * @param {{x:number,y:number}} a
-   * @param {{x:number,y:number}} b
+   * @param {{x: number, y: number}} a
+   * @param {{x: number, y: number}} b
    * @returns {number}
    */
   distToSegment(px, py, a, b) {
@@ -1064,7 +1162,7 @@ class Shape {
   /**
    * Reverses {@link Shape#pause} by restoring the shape's per-frame
    * points and re-selecting it.
-   * @param {Object<number, {x:number,y:number}[]>} startPoints - Per-frame points to restore, as captured before pausing.
+   * @param {Object<number, Array<{x: number, y: number}>>} startPoints - Per-frame points to restore, as captured before pausing.
    */
   unpause(startPoints) { /* TODO: Unpause button, rather than just undo/redo */
     this._frames = startPoints;
@@ -1097,7 +1195,10 @@ class CreateShapeCommand extends Command {
     this.drawClass = drawClass;
     this.x = x;
     this.y = y;
-    /** @type {Shape|null} Created lazily on first execute() so redo reuses the same shape instance. */
+    /**
+     * Created lazily on first execute() so redo reuses the same shape instance.
+     * @type {Shape|null}
+     */
     this.shape = null;
     this.frame = frameIdx;
   }
@@ -1156,12 +1257,14 @@ class AddPointCommand extends Command {
     }
     switchToDraw();
     this.shape.addPoint(this.x, this.y);
+    drawClass.selection.deactivateProvisionalPoints();
   }
 
   undo() {
     if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
+    drawClass.selection.deactivateProvisionalPoints();
     this.shape.deleteLastPoint();
   }
 }
@@ -1241,8 +1344,8 @@ class CloseShapeCommand extends Command {
 class DragShapeCommand extends Command {
   /**
    * @param {Shape} shape
-   * @param {{startMouse: {x:number,y:number}, startPoints: {x:number,y:number}[]}} dragState
-   * @param {{x:number,y:number}} mouse - Current mouse position.
+   * @param {{startMouse: {x: number, y: number}, startPoints: Array<{x: number, y: number}>}} dragState
+   * @param {{x: number, y: number}} mouse - Current mouse position.
    */
   constructor(shape, dragState, mouse) {
     super();
@@ -1304,8 +1407,8 @@ class DragPointCommand extends Command {
   /**
    * @param {Shape} shape
    * @param {number} expectResize - Index of the point being dragged.
-   * @param {{startPoints: {x:number,y:number}[]}} dragState
-   * @param {{x:number,y:number}} mouse - Current mouse position.
+   * @param {{startPoints: Array<{x: number, y: number}>}} dragState
+   * @param {{x: number, y: number}} mouse - Current mouse position.
    */
   constructor(shape, expectResize, dragState, mouse) {
     super();
@@ -1432,7 +1535,10 @@ class FramePauseCommand extends Command {
     super();
     this.pause_frame = frameIdx;
     this.shape = shape;
-    /** @type {Object<number, {x:number,y:number}[]>} Deep copy of the shape's per-frame points before pausing. */
+    /**
+     * Deep copy of the shape's per-frame points before pausing.
+     * @type {Object<number, Array<{x: number, y: number}>>}
+     */
     this.startPoints = Object.fromEntries(Object.entries(shape.frames).map(([key, frame]) => [key, frame.map(pt => ({ ...pt }))]));
   }
 
@@ -1880,13 +1986,25 @@ const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
 const CLIENT_ID = '592126216975-vre6eg876m5of41labf1ce9aps6mvsba.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyBB_pi9RBgkdc5dPjgMhUR0210fjggjMmM';
 const APP_ID = 'trax-490102';
-/** @type {?Object} OAuth2 token client from Google Identity Services, initialized in {@link gisLoaded}. */
+/**
+ * OAuth2 token client from Google Identity Services, initialized in {@link gisLoaded}.
+ * @type {?Object}
+ */
 let tokenClient;
-/** @type {?string} Cached Drive API access token, persisted in localStorage so the user isn't re-prompted every session until it expires. */
+/**
+ * Cached Drive API access token, persisted in localStorage so the user isn't re-prompted every session until it expires.
+ * @type {?string}
+ */
 let accessToken = localStorage.getItem('accessToken') ?? null;  
-/** @type {boolean} Whether the Google Picker API has finished initializing. */
+/**
+ * Whether the Google Picker API has finished initializing.
+ * @type {boolean}
+ */
 let pickerInited = false;
-/** @type {boolean} Whether Google Identity Services has finished initializing. */
+/**
+ * Whether Google Identity Services has finished initializing.
+ * @type {boolean}
+ */
 let gisInited = false;
 document.getElementById('driveUpload').style.visibility = 'hidden';
 document.getElementById('signout_button').disabled = true;
