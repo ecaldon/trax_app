@@ -1,0 +1,31 @@
+{
+  "opts": {
+    "destination": "./docs/api/",
+    "template": "node_modules/clean-jsdoc-theme",
+    "theme_opts": {
+      "theme": "dark",
+      "default_theme": "fallback-to-system-preference",
+      "title": "trax_app API Docs",
+      "menu": [
+        {
+          "title": "GitHub",
+          "link": "https://github.com/ecaldon/trax_app",
+          "target": "_blank"
+        }
+      ],
+      "meta": [
+        {
+          "name": "description",
+          "content": "API documentation for trax_app, a meteorological annotation web app"
+        }
+      ],
+      "codepen": { "enable_for": ["examples"] },
+      "search": true
+    }
+  },
+  "source": {
+    "include": ["trax_app.js"],
+    "includePattern": ".js$"
+  },
+  "plugins": []
+}

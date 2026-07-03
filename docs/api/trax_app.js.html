@@ -1,4 +1,6 @@
-/* TRAX: Web app to perform meteorological analysis through the drawing of contours */
+<!DOCTYPE html><html lang="en" style="font-size:16px"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="API documentation for trax_app, a meteorological annotation tool"><title>Source: trax_app.js</title><!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]--><script src="scripts/third-party/hljs.js" defer="defer"></script><script src="scripts/third-party/hljs-line-num.js" defer="defer"></script><script src="scripts/third-party/popper.js" defer="defer"></script><script src="scripts/third-party/tippy.js" defer="defer"></script><script src="scripts/third-party/tocbot.min.js"></script><script>var baseURL="/",locationPathname="";baseURL=(locationPathname=document.location.pathname).substr(0,locationPathname.lastIndexOf("/")+1)</script><link rel="stylesheet" href="styles/clean-jsdoc-theme.min.css"><svg aria-hidden="true" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:none"><defs><symbol id="copy-icon" viewbox="0 0 488.3 488.3"><g><path d="M314.25,85.4h-227c-21.3,0-38.6,17.3-38.6,38.6v325.7c0,21.3,17.3,38.6,38.6,38.6h227c21.3,0,38.6-17.3,38.6-38.6V124    C352.75,102.7,335.45,85.4,314.25,85.4z M325.75,449.6c0,6.4-5.2,11.6-11.6,11.6h-227c-6.4,0-11.6-5.2-11.6-11.6V124    c0-6.4,5.2-11.6,11.6-11.6h227c6.4,0,11.6,5.2,11.6,11.6V449.6z"/><path d="M401.05,0h-227c-21.3,0-38.6,17.3-38.6,38.6c0,7.5,6,13.5,13.5,13.5s13.5-6,13.5-13.5c0-6.4,5.2-11.6,11.6-11.6h227    c6.4,0,11.6,5.2,11.6,11.6v325.7c0,6.4-5.2,11.6-11.6,11.6c-7.5,0-13.5,6-13.5,13.5s6,13.5,13.5,13.5c21.3,0,38.6-17.3,38.6-38.6    V38.6C439.65,17.3,422.35,0,401.05,0z"/></g></symbol><symbol id="search-icon" viewBox="0 0 512 512"><g><g><path d="M225.474,0C101.151,0,0,101.151,0,225.474c0,124.33,101.151,225.474,225.474,225.474    c124.33,0,225.474-101.144,225.474-225.474C450.948,101.151,349.804,0,225.474,0z M225.474,409.323    c-101.373,0-183.848-82.475-183.848-183.848S124.101,41.626,225.474,41.626s183.848,82.475,183.848,183.848    S326.847,409.323,225.474,409.323z"/></g></g><g><g><path d="M505.902,476.472L386.574,357.144c-8.131-8.131-21.299-8.131-29.43,0c-8.131,8.124-8.131,21.306,0,29.43l119.328,119.328    c4.065,4.065,9.387,6.098,14.715,6.098c5.321,0,10.649-2.033,14.715-6.098C514.033,497.778,514.033,484.596,505.902,476.472z"/></g></g></symbol><symbol id="font-size-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M11.246 15H4.754l-2 5H.6L7 4h2l6.4 16h-2.154l-2-5zm-.8-2L8 6.885 5.554 13h4.892zM21 12.535V12h2v8h-2v-.535a4 4 0 1 1 0-6.93zM19 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></symbol><symbol id="add-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/></symbol><symbol id="minus-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M5 11h14v2H5z"/></symbol><symbol id="dark-theme-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 15.062 3.762A9 9 0 0 1 8.238 4.938 7.999 7.999 0 0 0 4 12z"/></symbol><symbol id="light-theme-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.515 4.929l1.414-1.414L7.05 5.636 5.636 7.05 3.515 4.93zM16.95 18.364l1.414-1.414 2.121 2.121-1.414 1.414-2.121-2.121zm2.121-14.85l1.414 1.415-2.121 2.121-1.414-1.414 2.121-2.121zM5.636 16.95l1.414 1.414-2.121 2.121-1.414-1.414 2.121-2.121zM23 11v2h-3v-2h3zM4 11v2H1v-2h3z"/></symbol><symbol id="reset-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M18.537 19.567A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10c0 2.136-.67 4.116-1.81 5.74L17 12h3a8 8 0 1 0-2.46 5.772l.997 1.795z"/></symbol><symbol id="down-icon" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.7803 6.21967C13.0732 6.51256 13.0732 6.98744 12.7803 7.28033L8.53033 11.5303C8.23744 11.8232 7.76256 11.8232 7.46967 11.5303L3.21967 7.28033C2.92678 6.98744 2.92678 6.51256 3.21967 6.21967C3.51256 5.92678 3.98744 5.92678 4.28033 6.21967L8 9.93934L11.7197 6.21967C12.0126 5.92678 12.4874 5.92678 12.7803 6.21967Z"></path></symbol><symbol id="codepen-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M16.5 13.202L13 15.535v3.596L19.197 15 16.5 13.202zM14.697 12L12 10.202 9.303 12 12 13.798 14.697 12zM20 10.869L18.303 12 20 13.131V10.87zM19.197 9L13 4.869v3.596l3.5 2.333L19.197 9zM7.5 10.798L11 8.465V4.869L4.803 9 7.5 10.798zM4.803 15L11 19.131v-3.596l-3.5-2.333L4.803 15zM4 13.131L5.697 12 4 10.869v2.262zM2 9a1 1 0 0 1 .445-.832l9-6a1 1 0 0 1 1.11 0l9 6A1 1 0 0 1 22 9v6a1 1 0 0 1-.445.832l-9 6a1 1 0 0 1-1.11 0l-9-6A1 1 0 0 1 2 15V9z"/></symbol><symbol id="close-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"/></symbol><symbol id="menu-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></symbol></defs></svg></head><body data-theme="fallback-to-system-preference"><div class="sidebar-container"><div class="sidebar" id="sidebar"><a href="/" class="sidebar-title sidebar-title-anchor">trax_app API Docs</a><div class="sidebar-items-container"><div class="sidebar-section-title with-arrow" data-isopen="false" id="sidebar-classes"><div>Classes</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="AddPointCommand.html">AddPointCommand</a></div><div class="sidebar-section-children"><a href="BckdCanvasClass.html">BckdCanvasClass</a></div><div class="sidebar-section-children"><a href="CloseShapeCommand.html">CloseShapeCommand</a></div><div class="sidebar-section-children"><a href="ColorChangeCommand.html">ColorChangeCommand</a></div><div class="sidebar-section-children"><a href="Command.html">Command</a></div><div class="sidebar-section-children"><a href="CommandGroup.html">CommandGroup</a></div><div class="sidebar-section-children"><a href="ContourDeleteCommand.html">ContourDeleteCommand</a></div><div class="sidebar-section-children"><a href="CreateShapeCommand.html">CreateShapeCommand</a></div><div class="sidebar-section-children"><a href="DragPointCommand.html">DragPointCommand</a></div><div class="sidebar-section-children"><a href="DragShapeCommand.html">DragShapeCommand</a></div><div class="sidebar-section-children"><a href="DrawCanvasClass.html">DrawCanvasClass</a></div><div class="sidebar-section-children"><a href="FramePauseCommand.html">FramePauseCommand</a></div><div class="sidebar-section-children"><a href="HistoryManager.html">HistoryManager</a></div><div class="sidebar-section-children"><a href="InsertPointCommand.html">InsertPointCommand</a></div><div class="sidebar-section-children"><a href="LabelChangeCommand.html">LabelChangeCommand</a></div><div class="sidebar-section-children"><a href="Shape.html">Shape</a></div></div><div class="sidebar-section-title with-arrow" data-isopen="false" id="sidebar-global"><div>Global</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="global.html#accessToken">accessToken</a></div><div class="sidebar-section-children"><a href="global.html#bckdClass">bckdClass</a></div><div class="sidebar-section-children"><a href="global.html#canvasContainer">canvasContainer</a></div><div class="sidebar-section-children"><a href="global.html#changeFrame">changeFrame</a></div><div class="sidebar-section-children"><a href="global.html#createImage">createImage</a></div><div class="sidebar-section-children"><a href="global.html#createPicker">createPicker</a></div><div class="sidebar-section-children"><a href="global.html#currentTool">currentTool</a></div><div class="sidebar-section-children"><a href="global.html#downloadAll">downloadAll</a></div><div class="sidebar-section-children"><a href="global.html#downloadCsv">downloadCsv</a></div><div class="sidebar-section-children"><a href="global.html#downloadImageFrames">downloadImageFrames</a></div><div class="sidebar-section-children"><a href="global.html#drawClass">drawClass</a></div><div class="sidebar-section-children"><a href="global.html#drawRequestedFrame">drawRequestedFrame</a></div><div class="sidebar-section-children"><a href="global.html#editingPoints">editingPoints</a></div><div class="sidebar-section-children"><a href="global.html#frameIdx">frameIdx</a></div><div class="sidebar-section-children"><a href="global.html#gapiLoaded">gapiLoaded</a></div><div class="sidebar-section-children"><a href="global.html#generateZipDownload">generateZipDownload</a></div><div class="sidebar-section-children"><a href="global.html#gisInited">gisInited</a></div><div class="sidebar-section-children"><a href="global.html#gisLoaded">gisLoaded</a></div><div class="sidebar-section-children"><a href="global.html#half">half</a></div><div class="sidebar-section-children"><a href="global.html#handleAuthClick">handleAuthClick</a></div><div class="sidebar-section-children"><a href="global.html#handleSignoutClick">handleSignoutClick</a></div><div class="sidebar-section-children"><a href="global.html#initCanvasFunctionality">initCanvasFunctionality</a></div><div class="sidebar-section-children"><a href="global.html#initializePicker">initializePicker</a></div><div class="sidebar-section-children"><a href="global.html#layerFilenameArrays">layerFilenameArrays</a></div><div class="sidebar-section-children"><a href="global.html#layerIdx">layerIdx</a></div><div class="sidebar-section-children"><a href="global.html#maybeEnableButtons">maybeEnableButtons</a></div><div class="sidebar-section-children"><a href="global.html#mySelBoxSize">mySelBoxSize</a></div><div class="sidebar-section-children"><a href="global.html#numFrames">numFrames</a></div><div class="sidebar-section-children"><a href="global.html#numLayers">numLayers</a></div><div class="sidebar-section-children"><a href="global.html#pickerCallback">pickerCallback</a></div><div class="sidebar-section-children"><a href="global.html#pickerInited">pickerInited</a></div><div class="sidebar-section-children"><a href="global.html#resizeCanvases">resizeCanvases</a></div><div class="sidebar-section-children"><a href="global.html#scale">scale</a></div><div class="sidebar-section-children"><a href="global.html#switchToDraw">switchToDraw</a></div><div class="sidebar-section-children"><a href="global.html#switchToSelect">switchToSelect</a></div><div class="sidebar-section-children"><a href="global.html#tokenClient">tokenClient</a></div></div></div></div></div><div class="navbar-container" id="VuAckcnZhf"><nav class="navbar"><div class="navbar-left-items"><div class="navbar-item"><a id="" href="https://github.com/ecaldon/trax_app" target="_blank">GitHub</a></div></div><div class="navbar-right-items"><div class="navbar-right-item"><button class="icon-button search-button" aria-label="open-search"><svg><use xlink:href="#search-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button theme-toggle" aria-label="toggle-theme"><svg><use class="theme-svg-use" xlink:href="#dark-theme-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button font-size" aria-label="change-font-size"><svg><use xlink:href="#font-size-icon"></use></svg></button></div></div><nav></nav></nav></div><div class="toc-container"><div class="toc-content"><span class="bold">On this page</span><div id="eed4d2a0bfd64539bb9df78095dec881"></div></div></div><div class="body-wrapper"><div class="main-content"><div class="main-wrapper"><section id="source-page" class="source-page"><header><h1 id="title" class="has-anchor">trax_app.js</h1></header><article><pre class="prettyprint source lang-js"><code>/* TRAX: Web app to perform meteorological analysis through the drawing of contours */
 /*
 Copyright 2026 Ezekiel Caldon
 
@@ -123,7 +125,7 @@ const drawCtx = drawCanvas.getContext('2d');
 /* Draw controls */
 const toolRadios = document.querySelectorAll('input[name="toolSelect"]');
 // Set current tool and cursor based on tool radios
-for(var i = 0, max = toolRadios.length; i < max; i++) {
+for(var i = 0, max = toolRadios.length; i &lt; max; i++) {
     toolRadios[i].onclick = function() {
       currentTool = Number(this.value); // Set current tool to the value of the radio button
       // Set cursor style based on current tool
@@ -223,12 +225,12 @@ class HistoryManager {
   constructor() {
     /**
      * Commands executed, oldest first.
-     * @type {Array<Command|CommandGroup>}
+     * @type {Array&lt;Command|CommandGroup>}
      */
     this.history = [];
     /**
      * Commands undone, available to redo.
-     * @type {Array<Command|CommandGroup>}
+     * @type {Array&lt;Command|CommandGroup>}
      */
     this.redoStack = [];
     /**
@@ -257,7 +259,7 @@ class HistoryManager {
   executeCommand(command) {
     command.execute();
 
-    if (this.groupingActive && this.currentCommandGroup) {
+    if (this.groupingActive &amp;&amp; this.currentCommandGroup) {
       this.currentCommandGroup.addCommand(command);
     } else {
       // Clear redo stack when a new command is executed
@@ -292,7 +294,7 @@ class HistoryManager {
    * a single undoable unit, if it contains at least one command.
    */
   endCommandGroup() {
-    if (this.groupingActive && this.currentCommandGroup) {
+    if (this.groupingActive &amp;&amp; this.currentCommandGroup) {
       if (this.currentCommandGroup.commands.length > 0) {
         this.redoStack = [];
         this.history.push(this.currentCommandGroup);
@@ -407,7 +409,7 @@ class BckdCanvasClass {
   draw(layer, frame) {
     this.clear();
     const curImg = this.layers[layer][frame];
-    if (curImg.height > bckdCanvas.height && curImg.width > bckdCanvas.width) {
+    if (curImg.height > bckdCanvas.height &amp;&amp; curImg.width > bckdCanvas.width) {
       scale = Math.min(bckdCanvas.width / curImg.width, bckdCanvas.height / curImg.height);
       bckdCtx.drawImage(curImg, 0, 0, (curImg.width * scale), (curImg.height * scale));
     } else if (curImg.height > bckdCanvas.height) {
@@ -462,7 +464,7 @@ class DrawCanvasClass {
     /**
      * Info about an in-progress drag, or null if the user isn't dragging.
      * `mode: 'body'` = dragging the whole shape; `mode: 'point'` = dragging a single selection handle.
-     * @type {{mode: 'body'|'point', startMouse: {x: number, y: number}, startPoints: Array<{x: number, y: number}>}|null}
+     * @type {{mode: 'body'|'point', startMouse: {x: number, y: number}, startPoints: Array&lt;{x: number, y: number}>}|null}
      */
     this.dragState = null;
     /**
@@ -522,7 +524,7 @@ class DrawCanvasClass {
 
     // draw all shapes
     var l = this._shapes.length;
-    for (var i = 0; i < l; i++) {
+    for (var i = 0; i &lt; l; i++) {
       drawCtx.globalAlpha = 1.0;
       this._shapes[i].draw(drawCtx, frame);
     }
@@ -531,7 +533,7 @@ class DrawCanvasClass {
       if (frameIdx > 0) {
         drawCtx.globalAlpha = 0.5;
         var l = this._shapes.length;
-        for (var i = 0; i < l; i++) {
+        for (var i = 0; i &lt; l; i++) {
           this._shapes[i].draw(drawCtx, frame - 1);
         }
       }
@@ -634,7 +636,7 @@ class DrawCanvasClass {
       } else {
         let selPoints = this._selection.getPoints(frameIdx);
         // If the user clicks near the starting point, close the shape and return to select mode
-        if (mx > (selPoints[0].x - 5) && mx < (selPoints[0].x + 5) && my > (selPoints[0].y - 5) && my < (selPoints[0].y + 5)) {
+        if (mx > (selPoints[0].x - 5) &amp;&amp; mx &lt; (selPoints[0].x + 5) &amp;&amp; my > (selPoints[0].y - 5) &amp;&amp; my &lt; (selPoints[0].y + 5)) {
           this._historyManager.beginCommandGroup();
           this._historyManager.executeCommand(new AddPointCommand(this._selection, selPoints[0].x, selPoints[0].y));
           this._historyManager.executeCommand(new CloseShapeCommand(this._selection));
@@ -659,22 +661,22 @@ class DrawCanvasClass {
   doMove(e) {
     var mouse = this.getPos(e);
     // If we're dragging a shape, move it by the amount the mouse has moved since the mouse originally clicked
-    if (this.dragState && this.dragState.mode === 'body' && this._selection) {
+    if (this.dragState &amp;&amp; this.dragState.mode === 'body' &amp;&amp; this._selection) {
       this._historyManager.executeCommand(new DragShapeCommand(this._selection, this.dragState, mouse));
       this.draw(frameIdx);
     // If we're dragging the point of a shape, move just that point to the mouse location
-    } else if (this.dragState && this.dragState.mode === 'point' && this._selection) {
+    } else if (this.dragState &amp;&amp; this.dragState.mode === 'point' &amp;&amp; this._selection) {
       this._historyManager.executeCommand(new DragPointCommand(this._selection, this.expectResize, this.dragState, mouse))
       this.draw(frameIdx);
     }
     
-    if (this._selection !== null && (!this.dragState) && currentTool === 0) {
+    if (this._selection !== null &amp;&amp; (!this.dragState) &amp;&amp; currentTool === 0) {
       let selPoints = this._selection.getPoints(frameIdx);
       let provPoints = this._selection.provisionalPoints;
-      for (var i = 0; i < selPoints.length; i++) {
+      for (var i = 0; i &lt; selPoints.length; i++) {
         var cur = selPoints[i];
-        if ((mouse.x >= (cur.x - half)) && (mouse.x <= (cur.x + half)) && 
-            (mouse.y >= (cur.y - half)) && (mouse.y <= (cur.y + half))) {
+        if ((mouse.x >= (cur.x - half)) &amp;&amp; (mouse.x &lt;= (cur.x + half)) &amp;&amp; 
+            (mouse.y >= (cur.y - half)) &amp;&amp; (mouse.y &lt;= (cur.y + half))) {
           // we found one!
           this.expectResize = i;
           this.expectInsert = -1;
@@ -683,10 +685,10 @@ class DrawCanvasClass {
         }
       }
 
-      for (var i = 0; i < provPoints.length; i++) {
+      for (var i = 0; i &lt; provPoints.length; i++) {
         var cur = provPoints[i];
-        if ((mouse.x >= (cur.x - half)) && (mouse.x <= (cur.x + half)) && 
-            (mouse.y >= (cur.y - half)) && (mouse.y <= (cur.y + half))) {
+        if ((mouse.x >= (cur.x - half)) &amp;&amp; (mouse.x &lt;= (cur.x + half)) &amp;&amp; 
+            (mouse.y >= (cur.y - half)) &amp;&amp; (mouse.y &lt;= (cur.y + half))) {
           // we found one!
           this.expectResize = -1;
           this.expectInsert = i;
@@ -707,7 +709,7 @@ class DrawCanvasClass {
       this.expectResize = -1;
       this.expectInsert = -1;
 
-      for (var i = 0; i < this.shapes.length; i++) {
+      for (var i = 0; i &lt; this.shapes.length; i++) {
         if (this.shapes[i].hitTest(mouse.x, mouse.y) > 0) {
           canvasContainer.style.cursor = 'pointer';
           return;
@@ -840,8 +842,8 @@ class DrawCanvasClass {
    */
   getMaxNumPoints() {
     let max = 0;
-    for (var i = 0; i < this.shapes.length; i++) {
-      for (var j = 0; j < numFrames; j++) {
+    for (var i = 0; i &lt; this.shapes.length; i++) {
+      for (var j = 0; j &lt; numFrames; j++) {
         if (this.shapes[i].frames[j]) {
           if (this.shapes[i].frames[j].length > max) {
             max = this.shapes[i].frames[j].length
@@ -865,7 +867,7 @@ class DrawCanvasClass {
  */
 class Shape {
   /**
-   * @param {Array<{x: number, y: number}>} first_point - Initial point(s) the shape starts with.
+   * @param {Array&lt;{x: number, y: number}>} first_point - Initial point(s) the shape starts with.
    * @param {boolean} closed - Whether the shape is a closed polygon (true) or open contour (false).
    * @param {string} color - CSS color string for the shape's stroke.
    * @param {string} label - User-facing label for the shape.
@@ -876,20 +878,20 @@ class Shape {
     this._label = label;
     /**
      * Map of frame index -> array of points on that frame.
-     * @type {Object<number, Array<{x: number, y: number}>>}
+     * @type {Object&lt;number, Array&lt;{x: number, y: number}>>}
      */
     this._frames = {};
     /**
      * Map of frame index -> whether the shape was explicitly modified on that frame.
-     * @type {Object<number, boolean>}
+     * @type {Object&lt;number, boolean>}
      */
     this._modified = {};
     /**
      * Transparent midpoint markers shown when editing points; see {@link Shape#setUpProvisionalPoints}.
-     * @type {Array<{x: number, y: number}>}
+     * @type {Array&lt;{x: number, y: number}>}
      */
     this._provisionalPoints = [];
-    for (var i = frameIdx; i < numFrames; i++) {
+    for (var i = frameIdx; i &lt; numFrames; i++) {
       this._frames[i] = first_point.map(p => ({x: p.x, y: p.y}));
     }
   }
@@ -900,7 +902,7 @@ class Shape {
    * @param {number} y
    */
   addPoint(x, y) {
-    for (var i = frameIdx; i < numFrames; i++) {
+    for (var i = frameIdx; i &lt; numFrames; i++) {
       this._frames[i].push({x: x, y: y});
     }
   }
@@ -920,7 +922,7 @@ class Shape {
    * @param {number} insIdx - Index of the provisional point to insert, and the shape-point index after which it's inserted.
    */
   insertPoint(insIdx) {
-    for (var i = frameIdx; i < numFrames; i++) {
+    for (var i = frameIdx; i &lt; numFrames; i++) {
       this._frames[i].splice(insIdx+1, 0, this._provisionalPoints[insIdx]);
     }
   }
@@ -938,21 +940,21 @@ class Shape {
    * @param {number} idx
    */
   deletePoint(idx) {
-    for (var i = frameIdx; i < numFrames; i++) {
+    for (var i = frameIdx; i &lt; numFrames; i++) {
       this._frames[i].splice(idx, 1);
     }
   }
 
   /** Deletes the last point of the shape from the current and all future frames. */
   deleteLastPoint() {
-    for (var i = frameIdx; i < numFrames; i++) {
+    for (var i = frameIdx; i &lt; numFrames; i++) {
       this._frames[i].pop();
     }
   }
 
   /**
    * @param {number} frame
-   * @returns {Array<{x: number, y: number}>|undefined} The shape's points on the given frame.
+   * @returns {Array&lt;{x: number, y: number}>|undefined} The shape's points on the given frame.
    */
   getPoints(frame) {
     return this._frames[frame];
@@ -984,7 +986,7 @@ class Shape {
       } else {
         lengthSubtract = 0;
       }
-      for (var i = 0; i < this._frames[frameIdx].length-lengthSubtract; i++) {
+      for (var i = 0; i &lt; this._frames[frameIdx].length-lengthSubtract; i++) {
         var p1 = this._frames[frameIdx][i];
         var p2 = this._frames[frameIdx][(i+1)%(this._frames[frameIdx].length)];
         if (Math.sqrt((p2.x-p1.x)**2 + (p2.y-p1.y)**2) > 18) {
@@ -1028,7 +1030,7 @@ class Shape {
     
     ctx.beginPath();
     ctx.moveTo(this._frames[frameIndex][0].x, this._frames[frameIndex][0].y);
-    for (var i = 1; i < this._frames[frameIndex].length; i++) {
+    for (var i = 1; i &lt; this._frames[frameIndex].length; i++) {
       ctx.lineTo(this._frames[frameIndex][i].x, this._frames[frameIndex][i].y);
     }
     if (this._closed) ctx.closePath();
@@ -1036,12 +1038,12 @@ class Shape {
 
     // console.log(drawClass.selection, this)
 
-    if (drawClass.selection === this && editingPoints === true) {
+    if (drawClass.selection === this &amp;&amp; editingPoints === true) {
       ctx.globalAlpha = 0.5
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#000000";
       ctx.lineWidth = 1;
-      for (var i = 0; i < this._provisionalPoints.length; i++) {
+      for (var i = 0; i &lt; this._provisionalPoints.length; i++) {
         var p = this._provisionalPoints[i];
         ctx.fillRect(p.x - half, p.y - half, mySelBoxSize, mySelBoxSize);
         ctx.strokeRect(p.x - half, p.y - half, mySelBoxSize, mySelBoxSize);
@@ -1049,12 +1051,12 @@ class Shape {
       ctx.globalAlpha = 1;
     }
 
-    if (drawClass.selection === this && frameIndex === frameIdx) {
+    if (drawClass.selection === this &amp;&amp; frameIndex === frameIdx) {
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#000000";
       ctx.lineWidth = 1;
       // draw selection boxes
-      for (var i = 0; i < this._frames[frameIndex].length; i++) {
+      for (var i = 0; i &lt; this._frames[frameIndex].length; i++) {
         var p = this._frames[frameIndex][i];
         ctx.fillRect(p.x - half, p.y - half, mySelBoxSize, mySelBoxSize);
         ctx.strokeRect(p.x - half, p.y - half, mySelBoxSize, mySelBoxSize);
@@ -1094,14 +1096,14 @@ class Shape {
   }
   /**
    * Per-frame point map.
-   * @type {Object<number, Array<{x: number, y: number}>>}
+   * @type {Object&lt;number, Array&lt;{x: number, y: number}>>}
    */
   get frames() {
     return this._frames;
   }
   /**
    * Current provisional midpoint markers.
-   * @type {Array<{x: number, y: number}>}
+   * @type {Array&lt;{x: number, y: number}>}
    */
   get provisionalPoints() {
     return this._provisionalPoints;
@@ -1133,15 +1135,15 @@ class Shape {
   hitTest(mx, my, tolerance = 6) {
     const pts = this._frames[frameIdx];
     if (!pts) return false;
-    if (pts.length < 2) return false;
+    if (pts.length &lt; 2) return false;
 
     // number of segments depends on whether the shape is closed
     const segCount = this.closed ? pts.length : pts.length - 1;
 
-    for (let i = 0; i < segCount; i++) {
+    for (let i = 0; i &lt; segCount; i++) {
       const a = pts[i];
       const b = pts[(i + 1) % pts.length]; // % wraps the last point back to first when closed
-      if (this.distToSegment(mx, my, a, b) < tolerance) return true;
+      if (this.distToSegment(mx, my, a, b) &lt; tolerance) return true;
     }
     return false;
   }
@@ -1152,7 +1154,7 @@ class Shape {
    * deselects it, and redraws.
    */
   pause() {
-    for (var i = frameIdx; i < numFrames; i++) {
+    for (var i = frameIdx; i &lt; numFrames; i++) {
       this._frames[i] = null;
     }
     drawClass.deSelect();
@@ -1162,7 +1164,7 @@ class Shape {
   /**
    * Reverses {@link Shape#pause} by restoring the shape's per-frame
    * points and re-selecting it.
-   * @param {Object<number, Array<{x: number, y: number}>>} startPoints - Per-frame points to restore, as captured before pausing.
+   * @param {Object&lt;number, Array&lt;{x: number, y: number}>>} startPoints - Per-frame points to restore, as captured before pausing.
    */
   unpause(startPoints) { /* TODO: Unpause button, rather than just undo/redo */
     this._frames = startPoints;
@@ -1344,7 +1346,7 @@ class CloseShapeCommand extends Command {
 class DragShapeCommand extends Command {
   /**
    * @param {Shape} shape
-   * @param {{startMouse: {x: number, y: number}, startPoints: Array<{x: number, y: number}>}} dragState
+   * @param {{startMouse: {x: number, y: number}, startPoints: Array&lt;{x: number, y: number}>}} dragState
    * @param {{x: number, y: number}} mouse - Current mouse position.
    */
   constructor(shape, dragState, mouse) {
@@ -1361,10 +1363,10 @@ class DragShapeCommand extends Command {
       changeFrame(this.frame);
     }
     this.shape.setModified(frameIdx, true);
-    for (var i = frameIdx; i < numFrames; i++) {
+    for (var i = frameIdx; i &lt; numFrames; i++) {
       let selPoints = this.shape.getPoints(i);
       if (!this.shape.getModified(i) || i == frameIdx) {
-        for (var j = 0; j < selPoints.length; j++) {
+        for (var j = 0; j &lt; selPoints.length; j++) {
           var p = selPoints[j];
           p.x = this.dragState.startPoints[j].x + (this.mouse.x - this.dragState.startMouse.x);
           p.y = this.dragState.startPoints[j].y + (this.mouse.y - this.dragState.startMouse.y);
@@ -1381,10 +1383,10 @@ class DragShapeCommand extends Command {
       changeFrame(this.frame);
     }
     this.shape.setModified(frameIdx, this.modified_before);
-    for (var i = frameIdx; i < numFrames; i++) {
+    for (var i = frameIdx; i &lt; numFrames; i++) {
       let selPoints = this.shape.getPoints(i);
       if (!this.shape.getModified(i) || i == frameIdx) {
-        for (var j = 0; j < selPoints.length; j++) {
+        for (var j = 0; j &lt; selPoints.length; j++) {
           var p = selPoints[j];
           p.x = this.dragState.startPoints[j].x;
           p.y = this.dragState.startPoints[j].y;
@@ -1407,7 +1409,7 @@ class DragPointCommand extends Command {
   /**
    * @param {Shape} shape
    * @param {number} expectResize - Index of the point being dragged.
-   * @param {{startPoints: Array<{x: number, y: number}>}} dragState
+   * @param {{startPoints: Array&lt;{x: number, y: number}>}} dragState
    * @param {{x: number, y: number}} mouse - Current mouse position.
    */
   constructor(shape, expectResize, dragState, mouse) {
@@ -1425,7 +1427,7 @@ class DragPointCommand extends Command {
       changeFrame(this.frame);
     }
     this.shape.setModified(frameIdx, true);
-    for (var i = frameIdx; i < numFrames; i++) {
+    for (var i = frameIdx; i &lt; numFrames; i++) {
       let selPoints = this.shape.getPoints(i);
       if (!this.shape.getModified(i) || i == frameIdx) {
         if (this.expectResize == 0 || this.expectResize == selPoints.length-1) {
@@ -1450,7 +1452,7 @@ class DragPointCommand extends Command {
       changeFrame(this.frame);
     }
     this.shape.setModified(frameIdx, this.modified_before);
-    for (var i = frameIdx; i < numFrames; i++) {
+    for (var i = frameIdx; i &lt; numFrames; i++) {
       let selPoints = this.shape.getPoints(this.frame);
       if (!this.shape.getModified(i) || i == frameIdx) {
         selPoints[this.expectResize].x = this.dragState.startPoints[this.expectResize].x;
@@ -1537,7 +1539,7 @@ class FramePauseCommand extends Command {
     this.shape = shape;
     /**
      * Deep copy of the shape's per-frame points before pausing.
-     * @type {Object<number, Array<{x: number, y: number}>>}
+     * @type {Object&lt;number, Array&lt;{x: number, y: number}>>}
      */
     this.startPoints = Object.fromEntries(Object.entries(shape.frames).map(([key, frame]) => [key, frame.map(pt => ({ ...pt }))]));
   }
@@ -1669,7 +1671,7 @@ async function drawRequestedFrame() {
   drawClass.draw(frameIdx);
 }
 
-/* Event listener & function to resize canvases with window resize */
+/* Event listener &amp; function to resize canvases with window resize */
 window.addEventListener('resize', () => {
   /* resizeCanvases(); Temporarily disabled, need to find way for shapes to adjust in addition to canvas */
 }); 
@@ -1705,7 +1707,7 @@ document.addEventListener("keydown", (event) => {
     case "y": drawClass.historyManager.redo(); break;
     case "Escape": deSelect(); break;
     case "ArrowLeft": if (frameIdx != 0) changeFrame(frameIdx - 1); break;
-    case "ArrowRight": if (frameIdx < numFrames - 1) changeFrame(frameIdx + 1); break;
+    case "ArrowRight": if (frameIdx &lt; numFrames - 1) changeFrame(frameIdx + 1); break;
     case "ArrowUp": 
       event.preventDefault();
       layerIdx--;
@@ -1723,7 +1725,7 @@ document.addEventListener("keydown", (event) => {
       switchToSelect();
       break;
     case "d": switchToDraw(); break;
-    case "Enter": if (currentTool === 1 && drawClass.selection) switchToSelect(); break;
+    case "Enter": if (currentTool === 1 &amp;&amp; drawClass.selection) switchToSelect(); break;
   }
 });
 
@@ -1755,7 +1757,7 @@ async function downloadAll() {
  * a flattened PNG blob, using a temporary off-screen canvas so the
  * visible canvases aren't disturbed. Restores the original layer/frame
  * view afterward.
- * @returns {Promise<Blob[]>} One PNG blob per layer/frame, in layer-major order.
+ * @returns {Promise&lt;Blob[]>} One PNG blob per layer/frame, in layer-major order.
  */
 async function downloadImageFrames() { /* TODO: Uncheck the overlay last */
   const tempCanvas = document.createElement("canvas");
@@ -1764,8 +1766,8 @@ async function downloadImageFrames() { /* TODO: Uncheck the overlay last */
   tempCanvas.width = bckdCanvas.width;
   tempCanvas.height = bckdCanvas.height;
   drawClass.deSelect();
-  for (let i = 0; i < numLayers; i++) {
-    for (let j = 0; j < numFrames; j++) {
+  for (let i = 0; i &lt; numLayers; i++) {
+    for (let j = 0; j &lt; numFrames; j++) {
       // Draw background and contours for the current frame onto the temporary canvas
       bckdClass.draw(i, j);
       drawClass.draw(j);
@@ -1804,10 +1806,10 @@ function downloadCsv() {
   csvContent += row + "\r\n";
 
   const headerRow = ["num", "label", "closed", "frame_num"]
-  for (var i = 0; i < numLayers; i++) {
+  for (var i = 0; i &lt; numLayers; i++) {
     headerRow.push("layer_" + (i+1).toString() + "_filename");
   }
-  for (var i = 0; i < drawClass.getMaxNumPoints(); i++) {
+  for (var i = 0; i &lt; drawClass.getMaxNumPoints(); i++) {
     headerRow.push("coord_" + ((i+1).toString() + "_x"));
     headerRow.push("coord_" + ((i+1).toString() + "_y"));
   }
@@ -1815,14 +1817,14 @@ function downloadCsv() {
   row = headerRow.join(",");
   csvContent += row + "\r\n";
 
-  for (var i = 0; i < drawClass.shapes.length; i++) {
-    for (var j = 0; j < numFrames; j++) {
+  for (var i = 0; i &lt; drawClass.shapes.length; i++) {
+    for (var j = 0; j &lt; numFrames; j++) {
       if (drawClass.shapes[i].frames[j]) {
         const dataRow = [i.toString(), drawClass.shapes[i].label, drawClass.shapes[i].closed.toString(), j.toString()];
-        for (var k = 0; k < numLayers; k++) {
+        for (var k = 0; k &lt; numLayers; k++) {
           dataRow.push(layerFilenameArrays[k][j]);
         }
-        for (var k = 0; k < drawClass.shapes[i].frames[j].length; k++) {
+        for (var k = 0; k &lt; drawClass.shapes[i].frames[j].length; k++) {
           dataRow.push(drawClass.shapes[i].frames[j][k].x);
           dataRow.push(drawClass.shapes[i].frames[j][k].y);
         }
@@ -1843,7 +1845,7 @@ function downloadCsv() {
 async function generateZipDownload(imageArray, csv) {
   const zip = new JSZip();
   var photoZip = zip.folder("canvas_images")
-  for (i = 0; i < imageArray.length; i++) {
+  for (i = 0; i &lt; imageArray.length; i++) {
     photoZip.file("image_" + i + ".png", imageArray[i]);
   }
   zip.file("shape_data.csv", csv);
@@ -1871,7 +1873,7 @@ overlayLast.addEventListener("click", () => {
   drawClass.draw(frameIdx);
 });
 
-/* Event listeners & functions for frame navigation */
+/* Event listeners &amp; functions for frame navigation */
 
 bck.addEventListener("click", () => {
   if (frameIdx != 0) {
@@ -1880,7 +1882,7 @@ bck.addEventListener("click", () => {
 });
 
 fwd.addEventListener("click", () => {
-  if (frameIdx < numFrames - 1) {
+  if (frameIdx &lt; numFrames - 1) {
     changeFrame(frameIdx + 1);
   }
 });
@@ -1915,7 +1917,7 @@ function switchToDraw() {
   canvasContainer.style.cursor = "crosshair";
 }
 
-/* Event listeners & functions for contour parameter changes */
+/* Event listeners &amp; functions for contour parameter changes */
 
 colorPicker.addEventListener("change", (event) => {
   drawClass.changeSelectedShapeColor(event);
@@ -1938,7 +1940,7 @@ deleteButton.addEventListener("click", () => {
  * as binary data via the Drive API, converts it to a Blob, and loads
  * that Blob into an Image element.
  * @param {{id: string, name: string, mimeType: string}} file - A Drive Picker doc result.
- * @returns {Promise<{image: HTMLImageElement, name: string}>} Resolves once the image has loaded.
+ * @returns {Promise&lt;{image: HTMLImageElement, name: string}>} Resolves once the image has loaded.
  */
 async function createImage(file) {
   return new Promise((resolve, reject) => {
@@ -1956,7 +1958,7 @@ async function createImage(file) {
         let binary = resp.body
         let l = binary.length
         let array = new Uint8Array(l);
-        for (var i = 0; i<l; i++){
+        for (var i = 0; i&lt;l; i++){
           array[i] = binary.charCodeAt(i);
         }
         let blob = new Blob([array], {type: file.mimeType});
@@ -1979,7 +1981,7 @@ async function createImage(file) {
 }
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END OF ACTUAL WEBSITE CODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-/* Google Drive API code & variables */
+/* Google Drive API code &amp; variables */
 // Authorization scopes required by the Google Drive/Picker APIs
 const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
 /* TODO: move CLIENT_ID/API_KEY/APP_ID to a gitignored config file before this repo goes public — see SECURITY note */
@@ -2035,7 +2037,7 @@ function gisLoaded() {
  * Enables user interaction after all libraries are loaded.
  */
 function maybeEnableButtons() {
-  if (pickerInited && gisInited) {
+  if (pickerInited &amp;&amp; gisInited) {
     document.getElementById('driveUpload').style.visibility = 'visible';
   }
 }
@@ -2155,3 +2157,4 @@ async function pickerCallback(pickerResp) {
     }
   }
 }
+</code></pre></article></section></div></div></div><div class="search-container" id="PkfLWpAbet" style="display:none"><div class="wrapper" id="iCxFxjkHbP"><button class="icon-button search-close-button" id="VjLlGakifb" aria-label="close search"><svg><use xlink:href="#close-icon"></use></svg></button><div class="search-box-c"><svg><use xlink:href="#search-icon"></use></svg> <input type="text" id="vpcKVYIppa" class="search-input" placeholder="Search..." autofocus></div><div class="search-result-c" id="fWwVHRuDuN"><span class="search-result-c-text">Type anything to view search result</span></div></div></div><div class="mobile-menu-icon-container"><button class="icon-button" id="mobile-menu" data-isopen="false" aria-label="menu"><svg><use xlink:href="#menu-icon"></use></svg></button></div><div id="mobile-sidebar" class="mobile-sidebar-container"><div class="mobile-sidebar-wrapper"><a href="/" class="sidebar-title sidebar-title-anchor">trax_app API Docs</a><div class="mobile-nav-links"><div class="navbar-item"><a id="" href="https://github.com/ecaldon/trax_app" target="_blank">GitHub</a></div></div><div class="mobile-sidebar-items-c"><div class="sidebar-section-title with-arrow" data-isopen="false" id="sidebar-classes"><div>Classes</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="AddPointCommand.html">AddPointCommand</a></div><div class="sidebar-section-children"><a href="BckdCanvasClass.html">BckdCanvasClass</a></div><div class="sidebar-section-children"><a href="CloseShapeCommand.html">CloseShapeCommand</a></div><div class="sidebar-section-children"><a href="ColorChangeCommand.html">ColorChangeCommand</a></div><div class="sidebar-section-children"><a href="Command.html">Command</a></div><div class="sidebar-section-children"><a href="CommandGroup.html">CommandGroup</a></div><div class="sidebar-section-children"><a href="ContourDeleteCommand.html">ContourDeleteCommand</a></div><div class="sidebar-section-children"><a href="CreateShapeCommand.html">CreateShapeCommand</a></div><div class="sidebar-section-children"><a href="DragPointCommand.html">DragPointCommand</a></div><div class="sidebar-section-children"><a href="DragShapeCommand.html">DragShapeCommand</a></div><div class="sidebar-section-children"><a href="DrawCanvasClass.html">DrawCanvasClass</a></div><div class="sidebar-section-children"><a href="FramePauseCommand.html">FramePauseCommand</a></div><div class="sidebar-section-children"><a href="HistoryManager.html">HistoryManager</a></div><div class="sidebar-section-children"><a href="InsertPointCommand.html">InsertPointCommand</a></div><div class="sidebar-section-children"><a href="LabelChangeCommand.html">LabelChangeCommand</a></div><div class="sidebar-section-children"><a href="Shape.html">Shape</a></div></div><div class="sidebar-section-title with-arrow" data-isopen="false" id="sidebar-global"><div>Global</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="global.html#accessToken">accessToken</a></div><div class="sidebar-section-children"><a href="global.html#bckdClass">bckdClass</a></div><div class="sidebar-section-children"><a href="global.html#canvasContainer">canvasContainer</a></div><div class="sidebar-section-children"><a href="global.html#changeFrame">changeFrame</a></div><div class="sidebar-section-children"><a href="global.html#createImage">createImage</a></div><div class="sidebar-section-children"><a href="global.html#createPicker">createPicker</a></div><div class="sidebar-section-children"><a href="global.html#currentTool">currentTool</a></div><div class="sidebar-section-children"><a href="global.html#downloadAll">downloadAll</a></div><div class="sidebar-section-children"><a href="global.html#downloadCsv">downloadCsv</a></div><div class="sidebar-section-children"><a href="global.html#downloadImageFrames">downloadImageFrames</a></div><div class="sidebar-section-children"><a href="global.html#drawClass">drawClass</a></div><div class="sidebar-section-children"><a href="global.html#drawRequestedFrame">drawRequestedFrame</a></div><div class="sidebar-section-children"><a href="global.html#editingPoints">editingPoints</a></div><div class="sidebar-section-children"><a href="global.html#frameIdx">frameIdx</a></div><div class="sidebar-section-children"><a href="global.html#gapiLoaded">gapiLoaded</a></div><div class="sidebar-section-children"><a href="global.html#generateZipDownload">generateZipDownload</a></div><div class="sidebar-section-children"><a href="global.html#gisInited">gisInited</a></div><div class="sidebar-section-children"><a href="global.html#gisLoaded">gisLoaded</a></div><div class="sidebar-section-children"><a href="global.html#half">half</a></div><div class="sidebar-section-children"><a href="global.html#handleAuthClick">handleAuthClick</a></div><div class="sidebar-section-children"><a href="global.html#handleSignoutClick">handleSignoutClick</a></div><div class="sidebar-section-children"><a href="global.html#initCanvasFunctionality">initCanvasFunctionality</a></div><div class="sidebar-section-children"><a href="global.html#initializePicker">initializePicker</a></div><div class="sidebar-section-children"><a href="global.html#layerFilenameArrays">layerFilenameArrays</a></div><div class="sidebar-section-children"><a href="global.html#layerIdx">layerIdx</a></div><div class="sidebar-section-children"><a href="global.html#maybeEnableButtons">maybeEnableButtons</a></div><div class="sidebar-section-children"><a href="global.html#mySelBoxSize">mySelBoxSize</a></div><div class="sidebar-section-children"><a href="global.html#numFrames">numFrames</a></div><div class="sidebar-section-children"><a href="global.html#numLayers">numLayers</a></div><div class="sidebar-section-children"><a href="global.html#pickerCallback">pickerCallback</a></div><div class="sidebar-section-children"><a href="global.html#pickerInited">pickerInited</a></div><div class="sidebar-section-children"><a href="global.html#resizeCanvases">resizeCanvases</a></div><div class="sidebar-section-children"><a href="global.html#scale">scale</a></div><div class="sidebar-section-children"><a href="global.html#switchToDraw">switchToDraw</a></div><div class="sidebar-section-children"><a href="global.html#switchToSelect">switchToSelect</a></div><div class="sidebar-section-children"><a href="global.html#tokenClient">tokenClient</a></div></div></div><div class="mobile-navbar-actions"><div class="navbar-right-item"><button class="icon-button search-button" aria-label="open-search"><svg><use xlink:href="#search-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button theme-toggle" aria-label="toggle-theme"><svg><use class="theme-svg-use" xlink:href="#dark-theme-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button font-size" aria-label="change-font-size"><svg><use xlink:href="#font-size-icon"></use></svg></button></div></div></div></div><script type="text/javascript" src="scripts/core.min.js"></script><script src="scripts/search.min.js" defer="defer"></script><script src="scripts/third-party/fuse.js" defer="defer"></script><script type="text/javascript">var tocbotInstance=tocbot.init({tocSelector:"#eed4d2a0bfd64539bb9df78095dec881",contentSelector:".main-content",headingSelector:"h1, h2, h3",hasInnerContainers:!0,scrollContainer:".main-content",headingsOffset:130,onClick:bringLinkToView})</script></body></html>
