@@ -91,12 +91,12 @@ let editingPoints = false;
 
 /**
  * Side length, in px, of the selection/provisional-point handle squares drawn on the canvas.
- * @type {number}
+ * @type {number} @global @constant @default
  */
 const mySelBoxSize = 9;
 /**
  * Half of {@link mySelBoxSize}; used to center handle squares on their point coordinate.
- * @type {number}
+ * @type {number} @global @constant
  */
 const half = mySelBoxSize / 2;
 
