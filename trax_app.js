@@ -1,29 +1,35 @@
 /* TRAX: Web app to perform meteorological analysis through the drawing of contours */
-/*
-Copyright 2026 Ezekiel Caldon
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+/**
+* @copyright
+* Copyright 2026 Ezekiel Caldon
 */
 
 /**
- * @fileoverview trax_app — a canvas-based meteorological annotation tool.
- * Users draw and edit contours ("shapes") over a sequence of map image
+* @license
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+
+* http://www.apache.org/licenses/LICENSE-2.0
+
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+/**
+ * @fileoverview 
+ * trax_app — a meteorological annotation tool.
+ * Users draw and edit shapes over a sequence of map image
  * frames/layers, with full undo/redo via the Command pattern, and export
  * the result as a CSV + zipped image bundle.
  *
  * See docs/ARCHITECTURE.md for design overview and rationale. This
  * file's doc comments describe individual class/method
- * behavior. You can run `jsdoc` to generate a browsable reference. #TODO: Leave the link to docs here?
+ * behavior. You can run `jsdoc` to generate a browsable reference.
+ * This documentation is available at https://ecaldon.github.io/trax_app/docs/api/
  */
 
 /* Actual website code starts here */
@@ -32,52 +38,52 @@ limitations under the License.
 
 /**
  * Index of the frame currently being displayed.
- * @type {number}
+ * @type {number} @global
  */
 let frameIdx = 0;
 /**
  * Total number of frames loaded into the app.
- * @type {number}
+ * @type {number} @global
  */
 let numFrames = 0;
 /**
  * Index of the map layer currently being displayed.
- * @type {number}
+ * @type {number} @global
  */
 let layerIdx = 0;
 /**
  * Total number of layers loaded into the app.
- * @type {number}
+ * @type {number} @global
  */
 let numLayers = 0;
 /**
  * Scale factor each background image was drawn at, relative to its native size. Recorded in exported CSV metadata so coordinates can be mapped back to original image pixels.
- * @type {number}
+ * @type {number} @global
  */
 let scale = [];
 /**
  * Array of arrays of image filenames, one inner array per layer, used to label exported CSV rows.
- * @type {string[][]}
+ * @type {string[][]} @global
  */
 const layerFilenameArrays = [];
 /**
  * The background-canvas controller for this session.
- * @type {BckdCanvasClass}
+ * @type {BckdCanvasClass} @global
  */
 let bckdClass;
 /**
  * The drawing-canvas controller for this session.
- * @type {DrawCanvasClass}
+ * @type {DrawCanvasClass} @global
  */
 let drawClass;
 /**
  * The drawing tool currently selected: 0 = select, 1 = pen, 2 = pan.
- * @type {number}
+ * @type {number} @global
  */
 let currentTool = 1;
 /**
  * Whether the currently selected shape is showing transparent "provisional" midpoint markers for point insertion.
- * @type {boolean}
+ * @type {boolean} @global
  */
 let editingPoints = false;
 
