@@ -90,8 +90,8 @@ let editingPoints = false;
 /* Global constants */
 
 /**
- * Side length, in px, of the selection/provisional-point handle squares drawn on the canvas.
- * @type {number} @global @constant @default {9}
+ * Side length, in px, of the selection/provisional-point handle squares drawn on the canvas. @default {9px}
+ * @type {number} @global @constant 
  */
 const mySelBoxSize = 9;
 /**
