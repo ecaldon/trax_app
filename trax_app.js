@@ -1,36 +1,30 @@
-/* TRAX: Web app to perform meteorological analysis through the drawing of contours */
+/** @file TRAX: Web app to perform meteorological analysis through the drawing of contours */
 /**
 * @copyright
 * Copyright 2026 Ezekiel Caldon
 */
 
 /**
+ * See docs/ARCHITECTURE.md for design overview and rationale. This
+ * file's doc comments describe individual class/method
+ * behavior. You can run `jsdoc` to generate a browsable reference.
+ * This documentation is available {@link|https://ecaldon.github.io/trax_app/docs/api/|here.}
+ */
+
+/**
 * @license
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-
+* 
 * http://www.apache.org/licenses/LICENSE-2.0
-
+* 
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
-/**
- * @fileoverview 
- * trax_app — a meteorological annotation tool.
- * Users draw and edit shapes over a sequence of map image
- * frames/layers, with full undo/redo via the Command pattern, and export
- * the result as a CSV + zipped image bundle.
- *
- * See docs/ARCHITECTURE.md for design overview and rationale. This
- * file's doc comments describe individual class/method
- * behavior. You can run `jsdoc` to generate a browsable reference.
- * This documentation is available at https://ecaldon.github.io/trax_app/docs/api/
- */
 
 /* Actual website code starts here */
 
@@ -92,7 +86,7 @@ let editingPoints = false;
 /**
  * Side length, in px, of the selection/provisional-point handle squares drawn on the canvas. 
  * @type {number} @global @constant 
- * @default 9
+ * @default 9px
  */
 const mySelBoxSize = 9;
 /**
@@ -118,8 +112,8 @@ const layerPicker = document.querySelector("#layerPicker");
 /**
  * The canvas the user sees is actually two stacked canvases: bckdCanvas
  * (the background map/radar imagery) and drawCanvas (user-drawn shapes).
- * Both live inside the canvasContainer div. See the Canvas API docs:
- * https://www.w3schools.com/graphics/canvas_drawing.asp
+ * Both live inside the canvasContainer div. See {@link
+ * https://www.w3schools.com/graphics/canvas_drawing.asp|more info about the Canvas API}
  */
 const canvasContainer = document.querySelector("#canvasContainer");
 const bckdCanvas = document.querySelector("#bckdCanvas");
@@ -129,7 +123,7 @@ const drawCtx = drawCanvas.getContext('2d');
 
 /* Draw controls */
 const toolRadios = document.querySelectorAll('input[name="toolSelect"]');
-// Set current tool and cursor based on tool radios
+/* Set current tool and cursor based on tool radios */
 for(var i = 0, max = toolRadios.length; i < max; i++) {
     toolRadios[i].onclick = function() {
       currentTool = Number(this.value); // Set current tool to the value of the radio button
@@ -163,12 +157,12 @@ const deleteButton = document.querySelector("#deleteContour");
 /**
  * Interface for any user action on the canvas that should support
  * undo/redo. Any new action ("concrete command") must extend this class
- * and implement {@link Command#execute} and {@link Command#undo}.
- *
- * Note that `execute()` doubles as the redo path — there is no separate
+ * and implement {@link Command#execute|Command.execute()} and {@link Command#undo|Command.undo()}.
+ * 
+ * Note that {@link Command#execute|execute()} doubles as the redo path — there is no separate
  * redo method. The app state at original-execution time may not match
  * the state at redo time (e.g. the user has since changed frames), so
- * `execute()` implementations must restore relevant context (frame,
+ * {@link Command#execute|execute()} implementations must restore relevant context (frame,
  * selection) themselves rather than assume it.
  * @abstract
  */
@@ -185,10 +179,11 @@ class Command {
 }
 
 /**
- * Bundles a sequence of {@link Command}s so they execute/undo as a single
+ * Bundles a sequence of {@link Commands} so they execute/undo as a single
  * unit. Used for actions that are one fluid user gesture (e.g. dragging a
  * shape) but internally register as multiple commands, so they undo
- * together rather than one-by-one. See {@link HistoryManager#beginCommandGroup}.
+ * together rather than one-by-one. 
+ * @see {@link HistoryManager#beginCommandGroup|HistoryManager.beginCommandGroup()}
  */
 class CommandGroup {
   constructor() {
@@ -234,17 +229,18 @@ class HistoryManager {
      */
     this.history = [];
     /**
-     * Commands undone, available to redo.
+     * Stack that keeps undone commands, ready to redo.
      * @type {Array<Command|CommandGroup>}
      */
     this.redoStack = [];
     /**
      * Maximum number of history entries kept before the oldest is dropped.
-     * @type {number}
+     * @type {number} @constant
+     * @default 100
      */
     this.maxHistorySize = 100; /* TODO: See what the greatest size without crashing the program could be */
     /**
-     * Whether commands are currently being collected into {@link HistoryManager#currentCommandGroup} instead of pushed to history individually.
+     * Whether commands are currently being collected into {@link HistoryManager#currentCommandGroup|HistoryManager.currentCommandGroup} instead of pushed to history individually.
      * @type {boolean}
      */
     this.groupingActive = false;
@@ -258,8 +254,8 @@ class HistoryManager {
   /**
    * Executes a command immediately. If a command group is active, the
    * command is added to that group instead of being pushed to history on
-   * its own; otherwise it's pushed directly and the redo stack is cleared.
-   * @param {Command} command
+   * its own; otherwise it's pushed to {@link HistoryManager#history|HistoryManager.history} directly and the redo stack is cleared.
+   * @param {Command} command Command to be executed
    */
   executeCommand(command) {
     command.execute();
@@ -283,10 +279,10 @@ class HistoryManager {
   }
 
   /**
-   * Begins collecting subsequent {@link HistoryManager#executeCommand}
+   * Begins collecting subsequent {@link HistoryManager#executeCommand|HistoryManager.executeCommand}
    * calls into a single {@link CommandGroup} rather than separate history
    * entries. Call when a continuous user gesture (drag, multi-step
-   * action) begins; pair with {@link HistoryManager#endCommandGroup}.
+   * action) begins, and then ends with {@link HistoryManager#endCommandGroup|HistoryManager.endCommandGroup}.
    */
   beginCommandGroup() { /* TODO: Abstract command group into beginning and end points for drag actions */
     this.groupingActive = true;
@@ -295,7 +291,7 @@ class HistoryManager {
 
   /**
    * Ends the current command group (started via
-   * {@link HistoryManager#beginCommandGroup}) and pushes it to history as
+   * {@link HistoryManager#beginCommandGroup|HistoryManager.beginCommandGroup}) and pushes it to history as
    * a single undoable unit, if it contains at least one command.
    */
   endCommandGroup() {
@@ -312,7 +308,7 @@ class HistoryManager {
     }
   }
 
-  /** Undoes the most recent command/group in history, moving it to the redo stack. Redraws the current frame. */
+  /** Undoes the most recent command/group in history, moving it to the redo stack and redraws the current frame. */
   undo() {
     if (this.history.length > 0) {
       const command = this.history.pop();
@@ -330,7 +326,7 @@ class HistoryManager {
     console.log("Redo stack ", this.redoStack);
   }
 
-  /** Re-executes the most recently undone command/group, moving it back to history. Redraws the current frame. */
+  /** Re-executes the most recently undone command/group, moving it back to history and redraws the current frame. */
   redo() {
     if (this.redoStack.length > 0) {
       const command = this.redoStack.pop();
@@ -353,8 +349,7 @@ class HistoryManager {
 
 /**
  * Controls the background canvas, which renders the map/radar imagery
- * for the current layer and frame. Unlike {@link DrawCanvasClass}, it
- * holds no undo/redo state — it's a pure renderer for uploaded images.
+ * for the current layer and frame. It lies underneath the {@link DrawCanvasClass}.
  */
 class BckdCanvasClass {
   /**
@@ -378,8 +373,7 @@ class BckdCanvasClass {
   }
 
   /**
-   * Adds a new layer of images (from a subsequent Drive upload in the
-   * same session). All layers must share the same frame count.
+   * Adds a new layer of images. All layers must share the same frame count.
    * @param {HTMLImageElement[]} images
    * @param {string} first_filename
    * @throws {Error} If `images.length` doesn't match the existing frame count.
@@ -408,8 +402,8 @@ class BckdCanvasClass {
    * Draws the image for the given layer/frame, scaling it down to fit
    * within canvasContainer if it's larger than the canvas in either
    * dimension. Updates the global {@link scale} factor used in CSV export.
-   * @param {number} layer
-   * @param {number} frame
+   * @param {number} layer - Number of the {@link layerIdx | layer} to be drawn
+   * @param {number} frame - Number of the {@link frameIdx | frame} to be drawn
    */
   draw(layer, frame) {
     this.clear();
@@ -455,7 +449,7 @@ class DrawCanvasClass {
 
     // Shape objects
     /**
-     * All shapes created in this session.
+     * All shapes currently in this session.
      * @type {Shape[]}
      */
     this._shapes = [];
@@ -468,17 +462,20 @@ class DrawCanvasClass {
     // State tracking
     /**
      * Info about an in-progress drag, or null if the user isn't dragging.
-     * `mode: 'body'` = dragging the whole shape; `mode: 'point'` = dragging a single selection handle.
+     * 
+     * The parameter `mode: 'body'` is in effect when the user is dragging the whole shape.
+     * 
+     * The parameter `mode: 'point'` is in effect when the user is dragging a single selection handle.
      * @type {{mode: 'body'|'point', startMouse: {x: number, y: number}, startPoints: Array<{x: number, y: number}>}|null}
      */
     this.dragState = null;
     /**
-     * Index of the selection handle the cursor is hovering, or -1 if none.
+     * Index of the selection handle the cursor is hovering over, -1 if none.
      * @type {number}
      */
     this.expectResize = -1;
     /**
-     * Index into the selected shape's provisional points that the cursor is hovering, or -1 if none.
+     * Index of the selected shape's provisional points that the cursor is hovering over, or -1 if none.
      * @type {number}
      */
     this.expectInsert = -1;
@@ -488,10 +485,6 @@ class DrawCanvasClass {
     this._historyManager = new HistoryManager();
   }
 
-  /**
-   * The currently selected shape.
-   * @type {Shape|null}
-   */
   get selection() {
     return this._selection;
   }
@@ -500,15 +493,6 @@ class DrawCanvasClass {
     this._selection = val;
   }
 
-  /** @type {HistoryManager} */
-  get historyManager() {
-    return this._historyManager;
-  }
-
-  /**
-   * All shapes in this session.
-   * @type {Shape[]}
-   */
   get shapes() {
     return this._shapes;
   }
@@ -656,9 +640,10 @@ class DrawCanvasClass {
 
   /**
    * Handles mousemove/touchmove on the canvas. If a drag is in progress,
-   * dispatches the corresponding drag command. Otherwise, with the
+   * calls the corresponding drag command. Otherwise, with the
    * select tool active and a shape selected, updates
-   * {@link DrawCanvasClass#expectResize}/{@link DrawCanvasClass#expectInsert}
+   * {@link DrawCanvasClass#expectResize|DrawCanvasClass.expectResize}/
+   * {@link DrawCanvasClass#expectInsert|DrawCanvasClass.expectInsert}
    * and the cursor style based on what the cursor is currently hovering
    * (a selection handle, a provisional point, the shape body, or nothing).
    * @param {MouseEvent|Touch} e
@@ -744,7 +729,7 @@ class DrawCanvasClass {
   /**
    * Handles double-click on the canvas. If the select tool is active and
    * the double-click lands on the selected shape, shows transparent
-   * provisional midpoint markers (via {@link Shape#setUpProvisionalPoints})
+   * provisional midpoint markers (via {@link Shape#setUpProvisionalPoints|Shape.setUpProvisionalPoints()})
    * so the user can click one to insert a new point there.
    * @param {MouseEvent} e
    */
@@ -761,7 +746,7 @@ class DrawCanvasClass {
   }
 
   /**
-   * Adds a shape to this session.
+   * Adds a shape to the {@link DrawCanvasClass}.
    * @param {Shape} shape
    */
   addShape(shape) {
@@ -875,7 +860,7 @@ class Shape {
    * @param {Array<{x: number, y: number}>} first_point - Initial point(s) the shape starts with.
    * @param {boolean} closed - Whether the shape is a closed polygon (true) or open contour (false).
    * @param {string} color - CSS color string for the shape's stroke.
-   * @param {string} label - User-facing label for the shape.
+   * @param {string} label - User's label for the shape.
    */
   constructor(first_point, closed, color, label) {
     this._closed = closed;
@@ -892,7 +877,7 @@ class Shape {
      */
     this._modified = {};
     /**
-     * Transparent midpoint markers shown when editing points; see {@link Shape#setUpProvisionalPoints}.
+     * Transparent midpoint markers shown when editing points; see {@link Shape#setUpProvisionalPoints|Shape.setUpProvisionalPoints}.
      * @type {Array<{x: number, y: number}>}
      */
     this._provisionalPoints = [];
@@ -901,10 +886,39 @@ class Shape {
     }
   }
 
+  get closed() {
+    return this._closed;
+  }
+  set closed(val) {
+    this._closed = val;
+  }
+
+  get color() {
+    return this._color;
+  }
+  set color(val) {
+    this._color = val;
+  }
+
+  get label() {
+    return this._label;
+  }
+  set label(val) {
+    this._label = val;
+  }
+
+  get frames() {
+    return this._frames;
+  }
+
+  get provisionalPoints() {
+    return this._provisionalPoints;
+  }
+
   /**
    * Adds a point to the shape on the current and all future frames.
-   * @param {number} x
-   * @param {number} y
+   * @param {number} x - x coordinate with 0 being the left edge of the canvas
+   * @param {number} y - y coordinate with 0 being the top edge of the canvas
    */
   addPoint(x, y) {
     for (var i = frameIdx; i < numFrames; i++) {
@@ -916,14 +930,7 @@ class Shape {
    * Inserts a point — taken from the cached provisional point at
    * `insIdx` — immediately after index `insIdx` in the shape's point
    * array, on the current and all future frames.
-   *
-   * Note: this reads `this._provisionalPoints[insIdx]` directly, so the
-   * caller must ensure provisional points haven't been recomputed since
-   * `insIdx` was captured (see {@link InsertPointCommand}, which inserts
-   * and then calls {@link Shape#resetProvisionalPoints} immediately
-   * after — but does not itself re-validate `insIdx` against the new
-   * layout, which is the source of the stale-index issue when multiple
-   * insertions happen without an intervening mousemove).
+   * 
    * @param {number} insIdx - Index of the provisional point to insert, and the shape-point index after which it's inserted.
    */
   insertPoint(insIdx) {
@@ -933,8 +940,9 @@ class Shape {
   }
 
   /**
+   * Whether the shape was explicitly modified on the given `frame`.
    * @param {number} frame
-   * @returns {boolean} Whether the shape was explicitly modified on the given frame.
+   * @returns {boolean} 
    */
   getModified(frame) {
     return this._modified[frame];
@@ -942,7 +950,7 @@ class Shape {
 
   /**
    * Deletes the point at `idx` from the current and all future frames.
-   * @param {number} idx
+   * @param {number} idx - Index of the point in the shape as it is in the current frame.
    */
   deletePoint(idx) {
     for (var i = frameIdx; i < numFrames; i++) {
@@ -958,8 +966,9 @@ class Shape {
   }
 
   /**
+   * The shape's points on the given frame.
    * @param {number} frame
-   * @returns {Array<{x: number, y: number}>|undefined} The shape's points on the given frame.
+   * @returns {Array<{x: number, y: number}>|undefined} 
    */
   getPoints(frame) {
     return this._frames[frame];
@@ -967,8 +976,8 @@ class Shape {
 
   /**
    * Sets whether the shape was explicitly modified on the given frame.
-   * @param {number} frame
-   * @param {boolean} condition
+   * @param {number} frame - Frame where the modified condition is being set
+   * @param {boolean} condition – Boolean modified condition to be set (true or false)
    */
   setModified(frame, condition) {
     this._modified[frame] = condition;
@@ -978,8 +987,8 @@ class Shape {
    * Computes transparent midpoint markers ("provisional points") for
    * each segment of the shape on the current frame that's longer than
    * 18px, so the user has a clickable target to insert a new point into
-   * that segment. No-op if provisional points are already active
-   * (`editingPoints` is true) — call {@link Shape#resetProvisionalPoints}
+   * that segment. Skips if provisional points are already active
+   * (`editingPoints` is true) — call {@link Shape#resetProvisionalPoints|Shape.resetProvisionalPoints()}
    * to force a recompute instead.
    */
   setUpProvisionalPoints() {
@@ -1009,10 +1018,8 @@ class Shape {
 
   /**
    * Fully recomputes provisional points from the shape's current point
-   * layout. Call after any mutation to the shape's points (insert,
-   * delete, drag) so stale provisional markers don't survive a change in
-   * point indices — see the note on {@link Shape#insertPoint} for why
-   * this alone doesn't fully eliminate stale-index issues.
+   * layout. This should be called after any change to the shape's points (insert,
+   * delete, drag) so the provisional points are always current.
    */
   resetProvisionalPoints() {
     this.deactivateProvisionalPoints();
@@ -1070,57 +1077,12 @@ class Shape {
   }
 
   /**
-   * Whether the shape is a closed polygon.
-   * @type {boolean}
-   */
-  get closed() {
-    return this._closed;
-  }
-  set closed(val) {
-    this._closed = val;
-  }
-  /**
-   * The shape's stroke color.
-   * @type {string}
-   */
-  get color() {
-    return this._color;
-  }
-  set color(val) {
-    this._color = val;
-  }
-  /**
-   * The shape's user-facing label.
-   * @type {string}
-   */
-  get label() {
-    return this._label;
-  }
-  set label(val) {
-    this._label = val;
-  }
-  /**
-   * Per-frame point map.
-   * @type {Object<number, Array<{x: number, y: number}>>}
-   */
-  get frames() {
-    return this._frames;
-  }
-  /**
-   * Current provisional midpoint markers.
-   * @type {Array<{x: number, y: number}>}
-   */
-  get provisionalPoints() {
-    return this._provisionalPoints;
-  }
-
-  /**
-   * Computes the shortest distance from point (px, py) to the line
+   * Computes the shortest distance from the mouse cursor position (px, py) to the line
    * segment from a to b.
-   * @param {number} px
-   * @param {number} py
-   * @param {{x: number, y: number}} a
-   * @param {{x: number, y: number}} b
+   * @param {number} px - Mouse cursor x
+   * @param {number} py - Mouse cursor y
+   * @param {{x: number, y: number}} a - First point of line segment
+   * @param {{x: number, y: number}} b - Second point of line segment
    * @returns {number}
    */
   distToSegment(px, py, a, b) {
@@ -1132,9 +1094,9 @@ class Shape {
   /**
    * Tests whether (mx, my) is within `tolerance` px of any segment of
    * the shape on the current frame.
-   * @param {number} mx
-   * @param {number} my
-   * @param {number} [tolerance=6]
+   * @param {number} mx - Mouse cursor x
+   * @param {number} my - Mouse cursor y
+   * @param {number} [tolerance=6] - Tolerance of hit test in px
    * @returns {boolean}
    */
   hitTest(mx, my, tolerance = 6) {
@@ -1167,7 +1129,7 @@ class Shape {
   }
 
   /**
-   * Reverses {@link Shape#pause} by restoring the shape's per-frame
+   * Reverses {@link Shape#pause|Shape.pause()} by restoring the shape's per-frame
    * points and re-selecting it.
    * @param {Object<number, Array<{x: number, y: number}>>} startPoints - Per-frame points to restore, as captured before pausing.
    */
@@ -1178,24 +1140,25 @@ class Shape {
   }
 }
 
-/* Concrete commands */
-/*
- * Each concrete command extends Command and implements a constructor
+/** 
+ * @namespace Concrete Commands 
+ *
+ * @description Each concrete command extends Command and implements a constructor
  * (saving everything needed to execute/undo/redo), execute() (which also
- * serves as redo()), and undo(). See the Command class doc comment above
- * for the redo-via-execute() convention these all follow.
+ * serves as redo()), and undo().
  */
 
 /**
- * Creates a new shape with its first point at (x, y). Used when the pen
+ * Creates a new shape with its first point at (`x`, `y`). Used when the pen
  * tool is clicked with no shape currently selected.
  * @extends Command
+ * @memberof Concrete Commands
  */
 class CreateShapeCommand extends Command {
   /**
-   * @param {DrawCanvasClass} drawClass
-   * @param {number} x
-   * @param {number} y
+   * @param {DrawCanvasClass} drawClass - drawClass object to draw the shape to
+   * @param {number} x - x coordinate for the first point of the shape
+   * @param {number} y - y coordinate for the first point of the shape
    */
   constructor(drawClass, x, y) {
     super();
@@ -1203,10 +1166,14 @@ class CreateShapeCommand extends Command {
     this.x = x;
     this.y = y;
     /**
-     * Created lazily on first execute() so redo reuses the same shape instance.
+     * Saves the shape object so redo reuses the same shape instance.
      * @type {Shape|null}
      */
     this.shape = null;
+    /**
+     * Saves the frame the shape was created on in case it needs to be undone/redone.
+     * @type {number}
+     */
     this.frame = frameIdx;
   }
 
@@ -1240,21 +1207,26 @@ class CreateShapeCommand extends Command {
 }
 
 /**
- * Adds a point to a shape at (x, y) on the current frame (and all future
- * frames, per {@link Shape#addPoint}).
+ * Adds a point to a shape at (`x`, `y`) on the current frame (and all future
+ * frames, per {@link Shape#addPoint|Shape.addPoint}).
  * @extends Command
+ * @memberof Concrete Commands
  */
 class AddPointCommand extends Command {
   /**
-   * @param {Shape} shape
-   * @param {number} x
-   * @param {number} y
+   * @param {Shape} shape - Shape object for the point to be added to
+   * @param {number} x - x coordinate of the point to be added
+   * @param {number} y - y coordinate of the point to be added
    */
   constructor(shape, x, y) {
     super();
     this.shape = shape;
     this.x = x;
     this.y = y;
+    /**
+     * Saves the frame the shape was created on in case it needs to be undone/redone.
+     * @type {number}
+     */
     this.frame = frameIdx;
   }
 
@@ -1280,16 +1252,21 @@ class AddPointCommand extends Command {
  * Inserts a point into a shape at a provisional-point location, then
  * resets provisional points so subsequent markers reflect the new layout.
  * @extends Command
+ * @memberof Concrete Commands
  */
 class InsertPointCommand extends Command {
   /**
-   * @param {Shape} shape
-   * @param {number} insIdx - Provisional point index to insert; see {@link Shape#insertPoint}.
+   * @param {Shape} shape - Shape for the point to be inserted into
+   * @param {number} insIdx - Index where the point will be inserted; see {@link Shape#insertPoint|Shape.insertPoint()}.
    */
   constructor(shape, insIdx) {
     super();
     this.shape = shape;
     this.insIdx = insIdx;
+    /**
+     * Saves the frame the shape was created on in case it needs to be undone/redone.
+     * @type {number}
+     */
     this.frame = frameIdx;
   }
 
@@ -1311,15 +1288,20 @@ class InsertPointCommand extends Command {
 }
 
 /**
- * Closes a shape into a polygon and switches to the select tool. Used
+ * Closes the shape and switches to the select tool. Used
  * when the pen tool clicks near a shape's first point.
  * @extends Command
+ * @memberof Concrete Commands
  */
 class CloseShapeCommand extends Command {
   /** @param {Shape} shape */
   constructor(shape) {
     super();
     this.shape = shape;
+    /**
+     * Saves the frame the shape was created on in case it needs to be undone/redone.
+     * @type {number}
+     */
     this.frame = frameIdx;
   }
 
@@ -1347,11 +1329,12 @@ class CloseShapeCommand extends Command {
  * change doesn't get silently overwritten by forward-propagation from an
  * earlier unmodified frame.
  * @extends Command
+ * @memberof Concrete Commands
  */
 class DragShapeCommand extends Command {
   /**
-   * @param {Shape} shape
-   * @param {{startMouse: {x: number, y: number}, startPoints: Array<{x: number, y: number}>}} dragState
+   * @param {Shape} shape - Shape to be dragged
+   * @param {{startMouse: {x: number, y: number}, startPoints: Array<{x: number, y: number}>}} dragState - Object storing the starting mouse coordinates and shape points
    * @param {{x: number, y: number}} mouse - Current mouse position.
    */
   constructor(shape, dragState, mouse) {
@@ -1359,7 +1342,15 @@ class DragShapeCommand extends Command {
     this.shape = shape;
     this.dragState = dragState;
     this.mouse = mouse;
+    /**
+     * Stores whether this shape has been modified
+     * @type {boolean}
+     */
     this.modified_before = this.shape.getModified(frameIdx);
+    /**
+     * Saves the frame the shape was created on in case it needs to be undone/redone.
+     * @type {number}
+     */
     this.frame = frameIdx;
   }
 
@@ -1409,12 +1400,13 @@ class DragShapeCommand extends Command {
  * mouse position. If the dragged point is the shape's first or last
  * point, both are moved together (closed-shape seam).
  * @extends Command
+ * @memberof Concrete Commands
  */
 class DragPointCommand extends Command {
   /**
    * @param {Shape} shape
    * @param {number} expectResize - Index of the point being dragged.
-   * @param {{startPoints: Array<{x: number, y: number}>}} dragState
+   * @param {{startPoints: Array<{x: number, y: number}>}} dragState - Object storing the starting shape points
    * @param {{x: number, y: number}} mouse - Current mouse position.
    */
   constructor(shape, expectResize, dragState, mouse) {
@@ -1423,7 +1415,15 @@ class DragPointCommand extends Command {
     this.dragState = dragState;
     this.expectResize = expectResize;
     this.mouse = mouse;
+    /**
+     * Stores whether this shape has been modified
+     * @type {boolean}
+     */
     this.modified_before = this.shape.getModified();
+    /**
+     * Saves the frame the shape was created on in case it needs to be undone/redone.
+     * @type {number}
+     */
     this.frame = frameIdx;
   }
 
@@ -1473,6 +1473,7 @@ class DragPointCommand extends Command {
 /**
  * Changes a shape's stroke color.
  * @extends Command
+ * @memberof Concrete Commands
  */
 class ColorChangeCommand extends Command {
   /**
@@ -1482,6 +1483,10 @@ class ColorChangeCommand extends Command {
   constructor(shape, newColor) {
     super();
     this.shape = shape;
+    /**
+     * The original stroke color of the shape.
+     * @type {color}
+     */
     this.oldColor = shape.color;
     this.newColor = newColor;
   }
@@ -1499,6 +1504,7 @@ class ColorChangeCommand extends Command {
  * Changes a shape's label, syncing the contour label input if the shape
  * is currently selected.
  * @extends Command
+ * @memberof Concrete Commands
  */
 class LabelChangeCommand extends Command {
   /**
@@ -1509,6 +1515,10 @@ class LabelChangeCommand extends Command {
     super();
     this.shape = shape;
     if (shape.label) {
+      /**
+       * The shape's label before it was changed.
+       * @type {string}
+       */
       this.oldLabel = shape.label;
     } else {
       this.oldLabel = "";
@@ -1535,11 +1545,16 @@ class LabelChangeCommand extends Command {
  * Pauses a shape on the current frame, saving a deep copy of its
  * per-frame points beforehand so undo can fully restore them.
  * @extends Command
+ * @memberof Concrete Commands
  */
 class FramePauseCommand extends Command {
-  /** @param {Shape} shape */
+  /** @param {Shape} shape - The shape to be paused */
   constructor(shape) {
     super();
+    /**
+     * The frame the shape was paused on
+     * @type {number}
+     */
     this.pause_frame = frameIdx;
     this.shape = shape;
     /**
@@ -1568,16 +1583,21 @@ class FramePauseCommand extends Command {
  * Deletes a shape entirely, restoring full contour-editor UI state on
  * undo so it's indistinguishable from never having been deleted.
  * @extends Command
+ * @memberof Concrete Commands
  */
 class ContourDeleteCommand extends Command {
   /**
-   * @param {DrawCanvasClass} drawClass
-   * @param {Shape} shape
+   * @param {DrawCanvasClass} drawClass - drawClass for the contour to be deleted from
+   * @param {Shape} shape - Shape to be deleted
    */
   constructor(drawClass, shape) {
     super();
     this.drawClass = drawClass;
     this.shape = shape;
+    /**
+     * Saves the frame the shape was created on in case it needs to be undone/redone.
+     * @type {number}
+     */
     this.frame = frameIdx;
   }
 
@@ -1611,8 +1631,8 @@ class ContourDeleteCommand extends Command {
  * Sets up the canvases, canvas classes, and event listeners after the
  * Google Drive Picker callback (i.e. once the user has selected map
  * images for the first time in this session).
- * @param {HTMLImageElement[]} images
- * @param {string} first_filename
+ * @param {HTMLImageElement[]} images - Images to be added to the first layer
+ * @param {string} first_filename - The filename of the first image to be added. This is currently used to name the layer for the dropdown.
  */
 function initCanvasFunctionality(images, first_filename) {
   bckdCanvas.width = canvasContainer.offsetWidth;
@@ -1795,11 +1815,11 @@ async function downloadImageFrames() { /* TODO: Uncheck the overlay last */
 
 /**
  * Builds the exported CSV of shape data. The first row is a `META`
- * sentinel row carrying the current {@link scale} factor (so exported
+ * row carrying the current {@link scale} factor (so exported
  * pixel coordinates can be mapped back to original image resolution).
- * The header row is sized dynamically to the largest layer count and
+ * The header row is sized dynamically to the
  * largest point count across all shapes/frames (see
- * {@link DrawCanvasClass#getMaxNumPoints}). One data row is written per
+ * {@link DrawCanvasClass#getMaxNumPoints|DrawCanvasClass.getMaxNumPoints()}). One data row is written per
  * shape per frame on which that shape exists (i.e. isn't paused).
  * @returns {string} CSV content, with `\r\n` line endings.
  */

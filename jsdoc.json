@@ -21,11 +21,12 @@
       ],
       "codepen": { "enable_for": ["examples"] },
       "search": true
-    }
+    },
+    "readme": "./docs/index.md"
   },
   "source": {
     "include": ["trax_app.js"],
     "includePattern": ".js$"
   },
-  "plugins": []
+  "plugins": ["plugins/markdown"]
 }

@@ -6,6 +6,5 @@ A meteorological annotation tool with limitless possibilities.
 Coming soon!
 
 ## Documentation
-- [API Reference](./api/)
 - [Architecture](../docs/ARCHITECTURE.md)
 - [Contributing](../CONTRIBUTING.md)
