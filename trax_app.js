@@ -532,10 +532,12 @@ class DrawCanvasClass {
   draw(frame) {
     this.clear();
     // draw all shapes
-    var l = this._shapes.length;
-    for (var i = 0; i < l; i++) {
-      drawCtx.globalAlpha = shapeOpacity;
-      this._shapes[i].draw(drawCtx, frame);
+    if (shapeOverlayCheckbox.checked) {
+      var l = this._shapes.length;
+      for (var i = 0; i < l; i++) {
+        drawCtx.globalAlpha = shapeOpacity;
+        this._shapes[i].draw(drawCtx, frame);
+      }
     }
 
     if (overlayLastCheckbox.checked) {
