@@ -1813,6 +1813,10 @@ async function downloadImageFrames() { /* TODO: Uncheck the overlay last */
   tempCanvas.width = bckdCanvas.width;
   tempCanvas.height = bckdCanvas.height;
   drawClass.deSelect();
+  shapeOpacitySlider.value = 1;
+  shapeOpacity = 1;
+  shapeOverlayCheckbox.checked = true;
+  overlayLastCheckbox.checked = false;
   for (let i = 0; i < numLayers; i++) {
     for (let j = 0; j < numFrames; j++) {
       // Draw background and contours for the current frame onto the temporary canvas
