@@ -80,6 +80,18 @@ let currentTool = 1;
  * @type {boolean} @global
  */
 let editingPoints = false;
+/**
+ * Opacity of the shape layer as a decimal out of 1.
+ * @type {number} @global
+ * @default 1;
+ */
+let shapeOpacity = 1;
+/**
+ * Opacity of the "overlay last" layer as a decimal out of 1.
+ * @type {number} @global
+ * @default 0.5;
+ */
+let overlayOpacity = 0.5;
 
 /* Global constants */
 
@@ -140,8 +152,17 @@ for(var i = 0, max = toolRadios.length; i < max; i++) {
 }
 
 /* Bottom controls */
-/* Overlay last */
-const overlayLast = document.querySelector("#overlayLast");
+/* Overlay/Opacity */
+const shapeOverlayCheckbox = document.querySelector("#shapeOverlayCheckbox");
+const shapeOpacityButton = document.querySelector("#shapeOpacityButton");
+const shapeOpacityPanel = document.querySelector("#shapeOpacityPanel");
+const shapeOpacitySlider = document.querySelector("#shapeOpacitySlider");
+const shapeOpacityValue = document.querySelector("#shapeOpacityValue");
+const overlayLastCheckbox = document.querySelector("#overlayLastCheckbox");
+const overlayOpacityButton = document.querySelector("#overlayOpacityButton");
+const overlayOpacityPanel = document.querySelector("#overlayOpacityPanel")
+const overlayOpacitySlider = document.querySelector("#overlayOpacitySlider");
+const overlayOpacityValue = document.querySelector("#overlayOpacityValue");
 /* Frame navigation */
 const bck = document.querySelector("#backOne");
 const frameSlider = document.querySelector("#frameSlider");
@@ -510,19 +531,18 @@ class DrawCanvasClass {
    */
   draw(frame) {
     this.clear();
-
     // draw all shapes
     var l = this._shapes.length;
     for (var i = 0; i < l; i++) {
-      drawCtx.globalAlpha = 1.0;
+      drawCtx.globalAlpha = shapeOpacity;
       this._shapes[i].draw(drawCtx, frame);
     }
 
-    if (overlayLast.checked) {
+    if (overlayLastCheckbox.checked) {
       if (frameIdx > 0) {
-        drawCtx.globalAlpha = 0.5;
         var l = this._shapes.length;
         for (var i = 0; i < l; i++) {
+          drawCtx.globalAlpha = overlayOpacity;
           this._shapes[i].draw(drawCtx, frame - 1);
         }
       }
@@ -1051,7 +1071,7 @@ class Shape {
     // console.log(drawClass.selection, this)
 
     if (drawClass.selection === this && editingPoints === true) {
-      ctx.globalAlpha = 0.5
+      ctx.globalAlpha = 0.5;
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#000000";
       ctx.lineWidth = 1;
@@ -1060,10 +1080,10 @@ class Shape {
         ctx.fillRect(p.x - half, p.y - half, mySelBoxSize, mySelBoxSize);
         ctx.strokeRect(p.x - half, p.y - half, mySelBoxSize, mySelBoxSize);
       }
-      ctx.globalAlpha = 1;
     }
 
     if (drawClass.selection === this && frameIndex === frameIdx) {
+      ctx.globalAlpha = 1;
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#000000";
       ctx.lineWidth = 1;
@@ -1894,9 +1914,90 @@ layerPicker.addEventListener("change", (event) => {
 
 /* Event listener for overlayLast */
 
-overlayLast.addEventListener("click", () => {
+shapeOverlayCheckbox.addEventListener("click", () => {
   drawClass.draw(frameIdx);
 });
+
+shapeOpacityButton.addEventListener("click", (e) => {
+  showOpacityPanel(e, shapeOpacityButton, shapeOpacityPanel);
+});
+
+overlayLastCheckbox.addEventListener("click", () => {
+  drawClass.draw(frameIdx);
+});
+
+overlayOpacityButton.addEventListener("click", (e) => {
+  showOpacityPanel(e, overlayOpacityButton, overlayOpacityPanel);
+});
+
+/**
+ * Positions the opacity panel in the lower-left corner of the canvas container
+ * @param {HTMLElement} panel - The opacity panel to position
+ */
+
+function positionPanel(panel) {
+  const rect = canvasContainer.getBoundingClientRect();
+  panel.style.top = `${rect.height + 12}px`;
+  panel.style.left = `${rect.left + 6}px`;
+}
+
+/**
+ * Shows or hides the opacity panel for the shape or overlay layer, and hides the other panel if it's open.
+ * @param {PointerEvent} e - The pointer event that triggered the function
+ * @param {button} button - The display opacity panel button that was clicked to trigger the function
+ * @param {div} panel - The opacity panel to show or hide
+ */
+
+function showOpacityPanel(e, button, panel) {
+  e.stopPropagation();
+  if (panel === shapeOpacityPanel) {
+    overlayOpacityPanel.setAttribute('hidden', '');
+  } else if (panel === overlayOpacityPanel) {
+    shapeOpacityPanel.setAttribute('hidden', '');
+  }
+  const isHidden = panel.hasAttribute("hidden");
+  if (isHidden) {
+    positionPanel(panel);
+    panel.removeAttribute('hidden');
+  } else {
+    panel.setAttribute('hidden', '');
+  }
+}
+
+document.addEventListener('click', (e) => {
+  if (!shapeOpacityPanel.contains(e.target) && e.target !== shapeOpacityButton) {
+    shapeOpacityPanel.setAttribute('hidden', '');
+  }
+  if (!overlayOpacityPanel.contains(e.target) && e.target !== overlayOpacityButton) {
+    overlayOpacityPanel.setAttribute('hidden', '');
+  }
+});
+
+shapeOpacitySlider.addEventListener('input', () => {
+  setLayerOpacity(shapeOpacitySlider, shapeOpacityValue, true);
+});
+
+overlayOpacitySlider.addEventListener('input', () => {
+  setLayerOpacity(overlayOpacitySlider, overlayOpacityValue, false);
+});
+
+/**
+ * Set the opacity of the shape or overlay layer based on the slider value and update the corresponding label.
+ * @param {input} slider 
+ * @param {span} valueLabel 
+ * @param {boolean} isItShape 
+ */
+
+function setLayerOpacity(slider, valueLabel, isItShape) {
+  const val = slider.value;
+  valueLabel.textContent = `${val}%`;
+  if (isItShape) {
+    shapeOpacity = val/100;
+  } else {
+    overlayOpacity = val/100;
+  }
+  drawClass.draw(frameIdx);
+}
 
 /* Event listeners & functions for frame navigation */
 

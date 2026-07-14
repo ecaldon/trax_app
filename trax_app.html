@@ -59,9 +59,27 @@ limitations under the License.
         </div>
       </div>
       <div id="bottomControls">
-        <div id="overlayLastApparatus">
-          <input type="checkbox" id="overlayLast">
-          <label for="overlayLast">Overlay last</label>
+        <div id="overlayApparatus">
+          <div id="overlayShape">
+            <input type="checkbox" id="shapeOverlayCheckbox" checked>
+            <label for="overlayLast">Shape layer</label>
+            <button class="toolbar-btn" id="shapeOpacityButton">▧</button>
+            <div class="opacity-panel" id="shapeOpacityPanel" hidden>
+              <label for="shapeOpacitySlider">Shape Opacity</label>
+              <input type="range" id="shapeOpacitySlider" min="0" max="100" value="100" step="1">
+              <span class="opacity-value" id="shapeOpacityValue">100%</span>
+            </div>
+          </div>
+          <div id="overlayLast">
+            <input type="checkbox" id="overlayLastCheckbox">
+            <label for="overlayLast">Overlay last</label>
+            <button class="toolbar-btn" id="overlayOpacityButton">▧</button>
+            <div class="opacity-panel" id="overlayOpacityPanel" hidden>
+              <label for="overlayOpacitySlider">Overlay Last Opacity</label>
+              <input type="range" id="overlayOpacitySlider" min="0" max="100" value="50" step="1">
+              <span class="opacity-value" id="overlayOpacityValue">50%</span>
+            </div>
+          </div>
         </div>
         <div id="frameSeekApparatus">
           <button id ="backOne">&#9204;</button>

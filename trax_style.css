@@ -52,6 +52,33 @@ select {
   margin-right: 5px;
 }
 
+.opacity-panel {
+  position: fixed;
+  z-index: 100;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.opacity-panel[hidden] {
+  display: none !important;
+}
+
+.opacity-panel input[type="range"] {
+  width: 120px;
+}
+
+.opacity-value {
+  font-family: 'Arial', 'Helvetica', sans-serif;
+  font-size: 13px;
+}
+
 .tool:active {
   background-color: rgb(82, 114, 114);
   border: 1px solid gray;
@@ -181,15 +208,32 @@ canvas {
   width: 100%;
 }
 
-#overlayLastApparatus {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+#overlayApparatus {
   background-color: rgb(242,242,247);
   border: solid gray 1px;
   border-radius: 6px;
+}
+
+#overlayShape, #overlayLast {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-right: 5px;
   padding: 5px;
+}
+
+#overlay {
+  position: fixed; /* Sit on top of the page content */
+  display: none; /* Hidden by default */
+  width: 100%; /* Full width (cover the whole page) */
+  height: 100%; /* Full height (cover the whole page) */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+  z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+  cursor: pointer; /* Add a pointer on hover */
 }
 
 #topControls {
