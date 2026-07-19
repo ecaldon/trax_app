@@ -518,6 +518,10 @@ class DrawCanvasClass {
     return this._shapes;
   }
 
+  get historyManager() {
+    return this._historyManager;
+  }
+
   /** Clears the drawing canvas. */
   clear() {
     drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
@@ -605,7 +609,11 @@ class DrawCanvasClass {
       }
 
       if (this.expectInsert !== -1) {
-        this._historyManager.executeCommand(new InsertPointCommand(this._selection, this.expectInsert));
+        const provisionalPoint = this._selection.provisionalPoints.find((point) => point.insertIndex === this.expectInsert);
+        if (provisionalPoint) {
+          this._historyManager.executeCommand(new InsertPointCommand(this._selection, this.expectInsert, provisionalPoint));
+        }
+        this.expectInsert = -1;
         this.draw(frameIdx);
         return;
       }
@@ -703,7 +711,7 @@ class DrawCanvasClass {
             (mouse.y >= (cur.y - half)) && (mouse.y <= (cur.y + half))) {
           // we found one!
           this.expectResize = -1;
-          this.expectInsert = i;
+          this.expectInsert = cur.insertIndex;
           canvasContainer.style.cursor = 'pointer';
           return;
         }
@@ -740,6 +748,7 @@ class DrawCanvasClass {
   doUp(e) {
     this.dragState = null;
     this.expectResize = -1;
+    this.expectInsert = -1;
     if (canvasContainer.style.cursor === 'grabbing') { /* TODO: Cursor may be incorrect */
       canvasContainer.style.cursor = 'grab';
     }
@@ -949,15 +958,30 @@ class Shape {
   }
 
   /**
-   * Inserts a point — taken from the cached provisional point at
-   * `insIdx` — immediately after index `insIdx` in the shape's point
-   * array, on the current and all future frames.
+   * Inserts a point — taken from the cached provisional point at the given
+   * point-array index — into the shape's point array, on the current and
+   * all future frames.
    * 
-   * @param {number} insIdx - Index of the provisional point to insert, and the shape-point index after which it's inserted.
+   * @param {number} insertIndex - Point-array index where the new point should be inserted.
    */
-  insertPoint(insIdx) {
+  insertPoint(insertIndex, provisionalPoint) {
+    if (!this._provisionalPoints || insertIndex === undefined || insertIndex === null || insertIndex < 0 || !provisionalPoint) {
+      return;
+    }
+
+    const pointToInsert = {
+      x: provisionalPoint.x,
+      y: provisionalPoint.y
+    };
+
     for (var i = frameIdx; i < numFrames; i++) {
-      this._frames[i].splice(insIdx+1, 0, this._provisionalPoints[insIdx]);
+      if (!this._frames[i]) {
+        continue;
+      }
+
+      const nextFramePoints = this._frames[i].slice();
+      nextFramePoints.splice(Math.min(insertIndex, nextFramePoints.length), 0, pointToInsert);
+      this._frames[i] = nextFramePoints;
     }
   }
 
@@ -1026,7 +1050,11 @@ class Shape {
         var p1 = this._frames[frameIdx][i];
         var p2 = this._frames[frameIdx][(i+1)%(this._frames[frameIdx].length)];
         if (Math.sqrt((p2.x-p1.x)**2 + (p2.y-p1.y)**2) > 18) {
-          this._provisionalPoints.push({x:((p1.x + p2.x) / 2), y:((p1.y + p2.y) / 2)});
+          this._provisionalPoints.push({
+            x: ((p1.x + p2.x) / 2),
+            y: ((p1.y + p2.y) / 2),
+            insertIndex: i + 1
+          });
         }
       }
     }
@@ -1281,10 +1309,11 @@ class InsertPointCommand extends Command {
    * @param {Shape} shape - Shape for the point to be inserted into
    * @param {number} insIdx - Index where the point will be inserted; see {@link Shape#insertPoint|Shape.insertPoint()}.
    */
-  constructor(shape, insIdx) {
+  constructor(shape, insIdx, provisionalPoint) {
     super();
     this.shape = shape;
     this.insIdx = insIdx;
+    this.provisionalPoint = provisionalPoint;
     /**
      * Saves the frame the shape was created on in case it needs to be undone/redone.
      * @type {number}
@@ -1296,7 +1325,7 @@ class InsertPointCommand extends Command {
     if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
-    this.shape.insertPoint(this.insIdx);
+    this.shape.insertPoint(this.insIdx, this.provisionalPoint);
     this.shape.resetProvisionalPoints();
   }
 
@@ -1304,7 +1333,7 @@ class InsertPointCommand extends Command {
     if (this.frame != frameIdx) {
       changeFrame(this.frame);
     }
-    this.shape.deletePoint(this.insIdx+1);
+    this.shape.deletePoint(this.insIdx);
     this.shape.resetProvisionalPoints();
   }
 }
