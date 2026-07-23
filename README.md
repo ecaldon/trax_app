@@ -85,7 +85,6 @@ When you have your selected files, click <img src="readme_imgs/icons/select.png"
 #### 1. Select the <span>&#10002;</span> tool, if it isn't selected already.
 #### 2. Point and click on the map canvas to draw points. Consecutive points will have lines drawn between them.
 #### 3. Press the Enter/Return key or click on the first point to finish drawing the shape. The selected tool will change to <span>&#8598;</span>.
-![Drawing on the canvas](/readme_imgs/2.2.1.png)
 
 > If you make a mistake at any time, you can click the <img src="icons/return.png" style="height:12px"> button or press "Z" to undo your last drawing action.
 
