@@ -150,8 +150,10 @@ canvas {
 #drawingTools {
   flex-shrink: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 48px;
 }
 
 #contourEditApparatus {
@@ -188,7 +190,7 @@ canvas {
   justify-content: center;
   place-content: space-between center;
   flex-direction: column;
-  height: 130px;
+  height: 90px;
   width: 60px;
 }
 
@@ -245,6 +247,14 @@ canvas {
 }
 
 #topLeftControls {
+  background-color: rgb(242,242,247);
+  border: solid gray 1px;
+  border-radius: 6px;
+  margin: 5px;
+  padding: 10px;
+}
+
+#topRightControls {
   background-color: rgb(242,242,247);
   border: solid gray 1px;
   border-radius: 6px;

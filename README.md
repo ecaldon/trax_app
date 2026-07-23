@@ -2,7 +2,7 @@
 ## Meteorological analysis across variables and times in an intuitive, open-source web app
 
 ### Want to get started fast? [Watch this video walkthrough](link).
-### Run into a bug? Let me know by adding an issue to the repository.
+### Run into a bug? Please help us by adding an issue to the repository.
 
 ## 1. Uploading Map Images
 ### 1.1. Sign in to Google Drive
@@ -20,10 +20,10 @@ A sign in window will pop up prompting you to sign into Google Drive. You may ne
 
 Before uploading images, you'll want to make sure that they have the following properties:
 - All layers should have the same set of times and the same number of images.<span style="color:rgb(172, 172, 0)">*</span>
-- All images should have the same map pixel area for converting coordinates to lat/lon.<span style="color:rgb(0, 100, 172)">*</span>
+- All images should have the same map pixel area for converting coordinates to lat/lon.
 
 > <p style="color:rgb(172, 172, 0)">*In a future version, times derived from filenames will be automatically matched from layer to layer.</p>
-> <p style="color:rgb(0, 100, 172)">*Sample code linked here to plot maps for same plot area.</span>
+> <p style="color:rgb(0, 100, 172)">
 
 Once you sign in by completing the previous step, the interface will launch the Google Drive Picker. On the top bar, you'll see three tabs, the first is to select images in your Google Drive, the second is to select images shared with you on Google Drive, and the third is to select images from your local machine.
 
@@ -41,40 +41,45 @@ When you have your selected files, click <img src="readme_imgs/icons/select.png"
 ### 2.1. The Interface
 ![The TRAX interface](/readme_imgs/2.1.1.png)
 
-#### 1. Undo/Redo, Google Drive Upload/Sign Out, Download
-- <span>&#8634;</span>: Undoes the previous drawing or contour edit action. (Can also be done by pressing "Z")
-- <span>&#8635;</span>: Redoes any undone drawing or contour edit action. (Can also be done by pressing "Y")
-- Upload: Upload a new layer of map images from Google Drive Picker.
-- Download: Download a .zip file of the .pngs of all frames of the drawing canvas, and a .csv of all shapes.
-- Sign Out: Sign out of your Google Account.
-- ?: Links to this documentation (not shown in screenshot)
+#### 1. Undo/Redo & Zoom Panel
+- <img src="icons/return.png" style="height:12px">: Undoes the previous drawing or contour edit action. (Can also be done by pressing "Z")
+- <img src="icons/return.png" style="height:12px; transform: scaleX(-1);">: Redoes any undone drawing or contour edit action. (Can also be done by pressing "Y")
+- Zoom slider: Shows and adjusts zoom in/out
+- <img src="icons/zoomDefault.png" style="height:12px;">: Reset the zoom to fit the image to the canvas.
 
-#### 2. Frame Display
+#### 2. Frame Ticker
 - Displays current frame number and total number of frames in the map set.
 
-#### 3. Layer Picker
-- Drop down menu that selects the map layer when multiple map layers are uploaded.
+#### 3. Layer Picker, Upload/Download Panel
+- Drop down menu that selects the map layer when multiple map layers are uploaded. Layers can also be switched by the up and down arrow keys.
+- <img src="icons/plus.png" style="height:12px;">: Upload a new layer of map images from Google Drive Picker.
+- <img src="icons/import.png" style="height:12px;">: Download a .zip file of the .pngs of all frames of the drawing canvas, and a .csv of all shapes.
+- Sign Out: Sign out of your Google Account.
 
 #### 4. Map Canvas
 - Displays the current map frame and layer
 - Displays and allows drawing and editing of contours
 
 #### 5. Drawing Tools
-- <span>&#8598;</span>: Select tool – Allows the selection and manipulation of contours and their points. (can be selcted by pressing "S")
+- <span>&#8598;</span>: Select tool – Allows the selection and manipulation of contours and their points, as well as zooming and panning. (can be selected by pressing "S")
 - <span>&#10002;</span>: Pen tool – Allows the creation of a new contour by making the points of the line or closed shape. (can be selected by pressing "D")
-- <span>&#10021;</span>: Pan tool – <span style="color:rgb(172, 172, 0)">Not yet developed! Doesn't do anything yet!</span>
 
-#### 6. Overlay Last Checkbox
-- Displays the last frame's shapes as a translucent overlay when checked
+#### 6. Help
+- <img src="icons/question.png" style="height:14px;">: Links to this documentation
 
-#### 7. Frame Seeker
-- Navigate through the frames of a layer using the slider or the <span>&#9204;</span> and <span>&#9205;</span> buttons.
+#### 7. Shape Layer Panel
+- Checkbox for the shape layer to show/hide the contours on the canvas.
+- Checkbox for "Overlay Last" to show/hide the contours from the previous frame (if applicable) on the canvas.
+- Each layer has a ▧ button to adjust that layer's opacity.
 
-#### 8. Contour Editor
+#### 8. Frame Seeker
+- Navigate through the frames of a layer using the slider, the <img src="icons/backward.png" style="height:14px;"> and <img src="icons/forward.png" style="height:14px;"> buttons, or the arrow keys.
+
+#### 9. Contour Editor
 - Color picker: Modifies the color of the selected contour.
 - Contour label: Gives the selected contour a name.
-- <span>&#9208;</span> : "Pauses" the selected shape on the previous frame. This would denote the end of a certain contour in time, such as the disappation of a cold pool.
-- <span>&#10006;</span> : Deletes the selected contour across all frames.
+- <img src="icons/pause.png" style="height:14px;"> : "Pauses" the selected shape on the previous frame. This would denote the end of a certain contour in time, such as the disappation of a cold pool.
+- <img src="icons/trashcan.png" style="height:14px;"> : Deletes the selected contour across all frames.
 
 ### 2.2. Drawing a Contour
 #### 1. Select the <span>&#10002;</span> tool, if it isn't selected already.
@@ -82,7 +87,7 @@ When you have your selected files, click <img src="readme_imgs/icons/select.png"
 #### 3. Press the Enter/Return key or click on the first point to finish drawing the shape. The selected tool will change to <span>&#8598;</span>.
 ![Drawing on the canvas](/readme_imgs/2.2.1.png)
 
-> If you make a mistake at any time, you can click the <span>&#8634;</span> button or press "Z" to undo your last drawing action.
+> If you make a mistake at any time, you can click the <img src="icons/return.png" style="height:12px"> button or press "Z" to undo your last drawing action.
 
 ### 2.3. Editing a Contour's Shape, Appearance, and Name
 Once you have drawn a contour, you can make edits, including dragging the contour, its points, and changing its color and label. To edit a contour, click on it in <span>&#8598;</span> mode. White bounding boxes over its points will appear. This means the contour is selected.
@@ -99,38 +104,44 @@ Click on the colored box in the Contour Editor. Select a color and press the Ent
 #### Changing the label of a contour
 Click or focus on the "Enter a label..." text box in the Contour Editor. Type the name you want to give the selected contour and press the Enter/Return key to change the name of the selected contour. This name will appear in the .csv export and is the same across *all frames*.
 
-> Again, if you make a mistake at any time, you can click the <span>&#8634;</span> button or press "Z" to undo any of the above actions.
+> Again, if you make a mistake at any time, you can click the <img src="icons/return.png" style="height:12px"> button or press "Z" to undo any of the above actions.
 
 ### 2.4. Adding Points to a Contour
 You can also add points to a contour by double clicking on the contour. This will cause the midpoints of each segment of the contour to show transparent points which can be added to the contour by clicking on them.
 
-> This action can be undone by clicking the <span>&#8634;</span> button or pressing "Z".
+> This action can be undone by clicking the <img src="icons/return.png" style="height:12px"> button or pressing "Z".
 
 ### 2.5. Deleting a Contour
-With a contour selected, click the <span>&#10006;</span> button to delete a contour across *all frames*.
+With a contour selected, click the <img src="icons/trashcan.png" style="height:14px"> button to delete a contour across *all frames*.
 
-> This action can be undone by clicking the <span>&#8634;</span> button or pressing "Z".
+> This action can be undone by clicking the <img src="icons/return.png" style="height:12px"> button or pressing "Z".
+
+### 2.6. Zooming and Panning Around the Canvas
+You can zoom in and out on the canvas by scrolling or by adjusting the zoom slider. You can pan around the canvas by clicking and dragging anywhere on the background image that isn't a contour. Reset to fitting the image to the canvas by clicking the <img src="icons/zoomDefault.png" style="height:14px;"> button.
 
 ## 3. Navigating Through Multiple Frames & Map Layers
 ### 3.1. Changing Frames
-You can change frames by pressing the <span>&#9204;</span> or <span>&#9205;</span> keys on your keyboard, clicking the <span>&#9204;</span> or <span>&#9205;</span> buttons in the Frame Seeker panel, or by dragging the slider in the Frame Seeker panel.
+You can change frames by pressing the left or right arrow keys on your keyboard, clicking the <img src="icons/backward.png" style="height:12px"> or <img src="icons/forward.png" style="height:12px"> buttons in the Frame Seeker panel, or by dragging the slider in the Frame Seeker panel.
 
-### 3.2. Overlay Shapes from the Last Frame
-Checking the Overlay Last Checkbox will display the shapes from the previous frame as a transparent overlay on the current frame, unless it is the first frame since there is no "last frame". This can be useful for quickly checking the movement of a contour across two frames while doing analysis.
+### 3.2. Toggle Display of Shape Layer and Adjust Opacity
+You can turn the display of the shape layer on or off temporarily by the shape layer checkbox. This can be useful for referencing the map underneath while plething contours. You can also adjust the opacity of the shape layer by clicking the ▧ button and adjusting the slider that pops up.
 
-![Drawing Canvas with Overlay Last enabled](/readme_imgs/3.2.1.png)
+### 3.3. Overlay Shapes from the Last Frame
+Checking the Overlay Last Checkbox will display the shapes from the previous frame as a transparent overlay on the current frame, unless it is the first frame since there is no "last frame". This can be useful for quickly checking the movement of a contour across two frames while doing analysis. You can also adjust the opacity of the shape layer by the ▧ button.
 
-### 3.3. Adding a New Map Layer
-Click "Upload" to upload a new map layer. Follow the instructions in 1.2 to upload the images. The new map layer will display on the canvas, and will be added to the Layer Picker dropdown menu.
+![Drawing Canvas with Overlay Last enabled](/readme_imgs/3.3.1.png)
+
+### 3.4. Adding a New Map Layer
+Click <img src="icons/plus.png" style="height:12px;"> to upload a new map layer. Follow the instructions in 1.2 to upload the images. The new map layer will display on the canvas, and will be added to the Layer Picker dropdown menu.
 
 > If the number of images is not the same as the other layer(s), an alert will remind you to upload the same number of images and will not load the images into the Drawing Canvas.
 
-### 3.4. Switching Between Map Layers
+### 3.5. Switching Between Map Layers
 Click the Layer Picker dropdown menu and select your desired map layer. It will display the same frame from the new layer. Shapes only change from frame to frame, their properties will remain the same across map layers. This system allows you to draw a contour using multiple datasets to aid your analysis. For example, you could analyze a cold front by examining surface observations, satellite imagery, and radar for the same time period.
 
-![Switching map layers using the Layer Picker dropdown](/readme_imgs/3.4.1.png)
+![Switching map layers using the Layer Picker dropdown](/readme_imgs/3.5.1.png)
 
-### 3.5. Starting & Ending a Contour in Time
+### 3.6. Starting & Ending a Contour in Time
 #### Starting a contour on a specific frame
 To start a contour on a specific frame, simply navigate to that frame and draw the contour. *Contours only exist on the frame they are drawn and all future frames*.
 
@@ -158,5 +169,3 @@ The shape data `.csv` file contains the following variables:
 | coord_`n`_y*        | Y coordinate of the n point on the shape and frame number specified by the row  |
 
 > \*These variables will have multiple iterations based on the number of layers and points in the shape.
-
-#### TODO: Converting the x and y Coordinates to Longitude & Latitude

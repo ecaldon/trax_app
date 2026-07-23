@@ -94,18 +94,16 @@ let shapeOpacity = 1;
 let overlayOpacity = 0.5;
 
 /* Global constants */
-
 /**
- * Side length, in px, of the selection/provisional-point handle squares drawn on the canvas. 
- * @type {number} @global @constant 
- * @default 9px
+ * Object representing the user's view of the canvas, i.e., a camera able to zoom and pan around the canvas.
+ * @type {Object} @global @constant
  */
-const mySelBoxSize = 9;
-/**
- * Half of {@link mySelBoxSize}; used to center handle squares on their point coordinate.
- * @type {number} @global @constant
- */
-const half = mySelBoxSize / 2;
+const viewport = {
+  baseScale: 1,
+  userZoom: 1,
+  offsetX: 0,
+  offsetY: 0
+}
 
 /* HTML Objects */
 /* This section declares the HTML elements used within the JS so their state can be read/modified and user actions responded to. */
@@ -114,11 +112,14 @@ const half = mySelBoxSize / 2;
 /* Top left panel */
 const undo = document.querySelector("#undo");
 const redo = document.querySelector("#redo");
-const download = document.querySelector("#download");
+const zoomSlider = document.querySelector("#zoomSlider");
+const zoomValue = document.querySelector("#zoomValue")
+const zoomFit = document.querySelector("#zoomFit");
 /* Frame label */
 const frameLabel = document.querySelector("#frameNum");
 /* Layer picker */
 const layerPicker = document.querySelector("#layerPicker");
+const download = document.querySelector("#download");
 
 /* Canvas objects */
 /**
@@ -429,19 +430,12 @@ class BckdCanvasClass {
   draw(layer, frame) {
     this.clear();
     const curImg = this.layers[layer][frame];
-    if (curImg.height > bckdCanvas.height && curImg.width > bckdCanvas.width) {
-      scale = Math.min(bckdCanvas.width / curImg.width, bckdCanvas.height / curImg.height);
-      bckdCtx.drawImage(curImg, 0, 0, (curImg.width * scale), (curImg.height * scale));
-    } else if (curImg.height > bckdCanvas.height) {
-      scale = bckdCanvas.height / curImg.height;
-      bckdCtx.drawImage(curImg, 0, 0, (curImg.width * scale), (curImg.height * scale));
-    } else if (curImg.width > bckdCanvas.width) {
-      scale = bckdCanvas.width / curImg.width;
-      bckdCtx.drawImage(curImg, 0, 0, (curImg.width * scale), (curImg.height * scale));
-    } else {
-      scale = 1;
-      bckdCtx.drawImage(curImg,0,0);
-    }
+    viewport.baseScale = computeBaseScale(curImg, bckdCanvas);
+    bckdCtx.save();
+    bckdCtx.translate(viewport.offsetX, viewport.offsetY);
+    bckdCtx.scale(viewport.baseScale * viewport.userZoom, viewport.baseScale * viewport.userZoom);
+    bckdCtx.drawImage(curImg,0,0);
+    bckdCtx.restore();
   }
 }
 
@@ -504,6 +498,10 @@ class DrawCanvasClass {
     // History manager
     /** @type {HistoryManager} */
     this._historyManager = new HistoryManager();
+
+    this.isPanning = false;
+    this.lastPanX = 0;
+    this.lastPanY = 0;
   }
 
   get selection() {
@@ -535,6 +533,9 @@ class DrawCanvasClass {
    */
   draw(frame) {
     this.clear();
+    drawCtx.save();
+    drawCtx.translate(viewport.offsetX, viewport.offsetY);
+    drawCtx.scale(viewport.baseScale * viewport.userZoom, viewport.baseScale * viewport.userZoom);
     // draw all shapes
     if (shapeOverlayCheckbox.checked) {
       var l = this._shapes.length;
@@ -553,6 +554,7 @@ class DrawCanvasClass {
         }
       }
     }
+    drawCtx.restore();
   }
 
   /**
@@ -562,23 +564,16 @@ class DrawCanvasClass {
    * @returns {{x: number, y: number}}
    */
   getPos(e) {
-    var element = drawCanvas, offsetX = 0, offsetY = 0, mx, my;
+    const rect = drawCanvas.getBoundingClientRect();
+    const clientX = e.clientX ?? e.pageX ?? rect.left;
+    const clientY = e.clientY ?? e.pageY ?? rect.top;
 
-    if (element.offsetParent !== undefined) {
-      do {
-        offsetX += element.offsetLeft;
-        offsetY += element.offsetTop;
-      } while ((element = element.offsetParent));
-    }
+    const mx = clientX - rect.left;
+    const my = clientY - rect.top;
+    const nativeX = (mx - viewport.offsetX) / (viewport.baseScale * viewport.userZoom);
+    const nativeY = (my - viewport.offsetY) / (viewport.baseScale * viewport.userZoom);
 
-    // Add padding and border style widths to offset
-    offsetX += this.styleBorderLeft + this.htmlLeft;
-    offsetY += this.styleBorderTop + this.htmlTop;
-
-    mx = e.pageX - offsetX;
-    my = e.pageY - offsetY;
-
-    return {x: mx, y: my};
+    return {x: nativeX, y: nativeY};
   }
 
   /**
@@ -646,6 +641,13 @@ class DrawCanvasClass {
       
       // havent returned means we have selected nothing
       this.deSelect();
+      const rect = drawCanvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      this.isPanning = true;
+      this.lastPanX = mouseX;
+      this.lastPanY = mouseY;
+      canvasContainer.style.cursor = 'grabbing';
       // Draw again because we might need the selection boxes to disappear
       this.draw(frameIdx);
     } else if (currentTool === 1) {
@@ -655,7 +657,7 @@ class DrawCanvasClass {
       } else {
         let selPoints = this._selection.getPoints(frameIdx);
         // If the user clicks near the starting point, close the shape and return to select mode
-        if (mx > (selPoints[0].x - 5) && mx < (selPoints[0].x + 5) && my > (selPoints[0].y - 5) && my < (selPoints[0].y + 5)) {
+        if (mx > (selPoints[0].x - (5 / (viewport.baseScale * viewport.userZoom))) && mx < (selPoints[0].x + (5 / (viewport.baseScale * viewport.userZoom))) && my > (selPoints[0].y - (5 / (viewport.baseScale * viewport.userZoom))) && my < (selPoints[0].y + (5 / (viewport.baseScale * viewport.userZoom)))) {
           this._historyManager.beginCommandGroup();
           this._historyManager.executeCommand(new AddPointCommand(this._selection, selPoints[0].x, selPoints[0].y));
           this._historyManager.executeCommand(new CloseShapeCommand(this._selection));
@@ -690,50 +692,65 @@ class DrawCanvasClass {
       this.draw(frameIdx);
     }
     
-    if (this._selection !== null && (!this.dragState) && currentTool === 0) {
-      let selPoints = this._selection.getPoints(frameIdx);
-      let provPoints = this._selection.provisionalPoints;
-      for (var i = 0; i < selPoints.length; i++) {
-        var cur = selPoints[i];
-        if ((mouse.x >= (cur.x - half)) && (mouse.x <= (cur.x + half)) && 
-            (mouse.y >= (cur.y - half)) && (mouse.y <= (cur.y + half))) {
-          // we found one!
-          this.expectResize = i;
-          this.expectInsert = -1;
-          canvasContainer.style.cursor = 'pointer';
-          return;
+    if ((!this.dragState) && currentTool === 0) {
+      if (this._selection !== null) {
+        let selPoints = this._selection.getPoints(frameIdx);
+        let provPoints = this._selection.provisionalPoints;
+        let half = getSelBoxSize() / 2;
+        for (var i = 0; i < selPoints.length; i++) {
+          var cur = selPoints[i];
+          if ((mouse.x >= (cur.x - half)) && (mouse.x <= (cur.x + half)) && 
+              (mouse.y >= (cur.y - half)) && (mouse.y <= (cur.y + half))) {
+            // we found one!
+            this.expectResize = i;
+            this.expectInsert = -1;
+            canvasContainer.style.cursor = 'pointer';
+            return;
+          }
         }
-      }
 
-      for (var i = 0; i < provPoints.length; i++) {
-        var cur = provPoints[i];
-        if ((mouse.x >= (cur.x - half)) && (mouse.x <= (cur.x + half)) && 
-            (mouse.y >= (cur.y - half)) && (mouse.y <= (cur.y + half))) {
-          // we found one!
+        for (var i = 0; i < provPoints.length; i++) {
+          var cur = provPoints[i];
+          if ((mouse.x >= (cur.x - half)) && (mouse.x <= (cur.x + half)) && 
+              (mouse.y >= (cur.y - half)) && (mouse.y <= (cur.y + half))) {
+            // we found one!
+            this.expectResize = -1;
+            this.expectInsert = cur.insertIndex;
+            canvasContainer.style.cursor = 'pointer';
+            return;
+          }
+        }
+
+        if (this._selection.hitTest(mouse.x, mouse.y) > 0) {
           this.expectResize = -1;
-          this.expectInsert = cur.insertIndex;
-          canvasContainer.style.cursor = 'pointer';
+          this.expectInsert = -1;
+          canvasContainer.style.cursor = 'all-scroll';
           return;
         }
-      }
 
-      if (this._selection.hitTest(mouse.x, mouse.y) > 0) {
+        // not over a selection box, return to normal
+        this.dragState = null;
         this.expectResize = -1;
         this.expectInsert = -1;
-        canvasContainer.style.cursor = 'all-scroll';
-        return;
       }
-
-      // not over a selection box, return to normal
-      this.dragState = null;
-      this.expectResize = -1;
-      this.expectInsert = -1;
 
       for (var i = 0; i < this.shapes.length; i++) {
         if (this.shapes[i].hitTest(mouse.x, mouse.y) > 0) {
           canvasContainer.style.cursor = 'pointer';
           return;
         }
+      }
+
+      if (this.isPanning) {
+        const rect = drawCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        viewport.offsetX += (mouseX - this.lastPanX);
+        viewport.offsetY += (mouseY - this.lastPanY);
+        this.lastPanX = mouseX;
+        this.lastPanY = mouseY;
+        drawRequestedFrame();
+        return;
       }
 
       canvasContainer.style.cursor='default';
@@ -749,11 +766,15 @@ class DrawCanvasClass {
     this.dragState = null;
     this.expectResize = -1;
     this.expectInsert = -1;
-    if (canvasContainer.style.cursor === 'grabbing') { /* TODO: Cursor may be incorrect */
+    if (canvasContainer.style.cursor === 'grabbing') { 
       canvasContainer.style.cursor = 'grab';
     }
     if (this._historyManager.groupingActive) {
       this._historyManager.endCommandGroup();
+    }
+    if (this.isPanning) {
+      this.isPanning = false;
+      canvasContainer.style.cursor = 'default';
     }
   }
 
@@ -773,6 +794,32 @@ class DrawCanvasClass {
         this._selection.setUpProvisionalPoints();
         this.draw(frameIdx);
       }
+    }
+  }
+
+  doWheel(e) {
+    e.preventDefault();
+    if (currentTool === 0) {
+      const rect = drawCanvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const oldEffectiveScale = viewport.baseScale * viewport.userZoom;
+
+      // native point currently under the cursor, BEFORE zoom changes
+      const nativeX = (mouseX - viewport.offsetX) / oldEffectiveScale;
+      const nativeY = (mouseY - viewport.offsetY) / oldEffectiveScale;
+
+      // update zoom (clamp to sane bounds)
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1; // scroll down = zoom out, up = zoom in
+      viewport.userZoom = viewport.userZoom * zoomFactor;
+
+      const newEffectiveScale = viewport.baseScale * viewport.userZoom;
+
+      // solve offset so the SAME native point still lands at (canvasX, canvasY)
+      viewport.offsetX = mouseX - nativeX * newEffectiveScale;
+      viewport.offsetY = mouseY - nativeY * newEffectiveScale;
+
+      drawRequestedFrame();
     }
   }
 
@@ -1085,17 +1132,19 @@ class Shape {
    * @param {number} frameIndex
    */
   draw(ctx, frameIndex) {
-
     if (this._frames[frameIndex] === undefined || this._frames[frameIndex] === null) return; // If this shape doesn't exist in the current frame, don't draw it
-    ctx.strokeStyle = this._color;
-    ctx.lineWidth = 4;
-    
+    let mySelBoxSize = getSelBoxSize();
+    let half = mySelBoxSize / 2;
+
     ctx.beginPath();
     ctx.moveTo(this._frames[frameIndex][0].x, this._frames[frameIndex][0].y);
     for (var i = 1; i < this._frames[frameIndex].length; i++) {
       ctx.lineTo(this._frames[frameIndex][i].x, this._frames[frameIndex][i].y);
     }
     if (this._closed) ctx.closePath();
+    
+    ctx.strokeStyle = this._color;
+    ctx.lineWidth = 4 / (viewport.baseScale * viewport.userZoom);
     ctx.stroke();
 
     // console.log(drawClass.selection, this)
@@ -1104,7 +1153,7 @@ class Shape {
       ctx.globalAlpha = 0.5;
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#000000";
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1 / (viewport.baseScale * viewport.userZoom);
       for (var i = 0; i < this._provisionalPoints.length; i++) {
         var p = this._provisionalPoints[i];
         ctx.fillRect(p.x - half, p.y - half, mySelBoxSize, mySelBoxSize);
@@ -1116,7 +1165,7 @@ class Shape {
       ctx.globalAlpha = 1;
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#000000";
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1 / (viewport.baseScale * viewport.userZoom);
       // draw selection boxes
       for (var i = 0; i < this._frames[frameIndex].length; i++) {
         var p = this._frames[frameIndex][i];
@@ -1149,7 +1198,7 @@ class Shape {
    * @param {number} [tolerance=6] - Tolerance of hit test in px
    * @returns {boolean}
    */
-  hitTest(mx, my, tolerance = 6) {
+  hitTest(mx, my, tolerance = (6 / (viewport.baseScale * viewport.userZoom))) {
     const pts = this._frames[frameIdx];
     if (!pts) return false;
     if (pts.length < 2) return false;
@@ -1731,6 +1780,10 @@ function initCanvasFunctionality(images, first_filename) {
   drawCanvas.addEventListener('dblclick', function(e) {
     drawClass.doDoubleClick(e);
   }, true);
+
+  drawCanvas.addEventListener('wheel', function(e) {
+    drawClass.doWheel(e);
+  }, true);
 }
 
 /**
@@ -1745,11 +1798,13 @@ async function drawRequestedFrame() {
   drawClass.clear();
   bckdClass.draw(layerIdx, frameIdx);
   drawClass.draw(frameIdx);
+  zoomSlider.value = viewport.userZoom * 100;
+  zoomValue.textContent = `${Math.round(viewport.userZoom * 100)}%`;
 }
 
 /* Event listener & function to resize canvases with window resize */
 window.addEventListener('resize', () => {
-  /* resizeCanvases(); Temporarily disabled, need to find way for shapes to adjust in addition to canvas */
+  resizeCanvases();
 }); 
 
 /**
@@ -1759,12 +1814,20 @@ window.addEventListener('resize', () => {
  * currently adjust when the canvas resizes, so shapes visually shift
  * out of place relative to the background image.
  */
-function resizeCanvases() { /* TODO: Shapes get moved around when the window is resized, maybe just never allow it to resize? */
+function resizeCanvases() { 
   bckdCanvas.width = canvasContainer.offsetWidth;
   bckdCanvas.height = canvasContainer.offsetHeight;
   drawCanvas.width = canvasContainer.offsetWidth;
   drawCanvas.height = canvasContainer.offsetHeight;
   drawRequestedFrame();
+}
+
+function computeBaseScale(img, canvas) {
+  return Math.min(canvas.width / img.width, canvas.height / img.height);
+}
+
+function getSelBoxSize() {
+  return 9 / (viewport.baseScale * viewport.userZoom);
 }
 
 /**
@@ -1786,15 +1849,19 @@ document.addEventListener("keydown", (event) => {
     case "ArrowRight": if (frameIdx < numFrames - 1) changeFrame(frameIdx + 1); break;
     case "ArrowUp": 
       event.preventDefault();
-      layerIdx--;
-      layerPicker.selectedIndex = layerIdx;
-      bckdClass.draw(layerIdx, frameIdx);
+      if (layerIdx > 0) {
+        layerIdx--;
+        layerPicker.selectedIndex = layerIdx;
+        bckdClass.draw(layerIdx, frameIdx);
+      }
       break;
     case "ArrowDown":
       event.preventDefault();
-      layerIdx++;
-      layerPicker.selectedIndex = layerIdx;
-      bckdClass.draw(layerIdx, frameIdx);
+      if (layerIdx < layerPicker.options.length - 1) {
+        layerIdx++;
+        layerPicker.selectedIndex = layerIdx;
+        bckdClass.draw(layerIdx, frameIdx);
+      }
       break;
     case "s": 
       event.preventDefault();
@@ -1812,6 +1879,21 @@ undo.addEventListener("click", () => {
 
 redo.addEventListener("click", () => {
   drawClass.historyManager.redo();
+});
+
+zoomSlider.addEventListener("input", () => {
+  viewport.userZoom = zoomSlider.value / 100;
+  zoomValue.textContent = `${Math.round(viewport.userZoom * 100)}%`;
+  drawRequestedFrame();
+});
+
+zoomFit.addEventListener("click", () => {
+  viewport.userZoom = 1
+  viewport.offsetX = 0
+  viewport.offsetY = 0
+  zoomSlider.value = viewport.userZoom * 100;
+  zoomValue.textContent = `${Math.round(viewport.userZoom * 100)}%`;
+  drawRequestedFrame();
 });
 
 download.addEventListener("click", () => {
@@ -2208,12 +2290,12 @@ function maybeEnableButtons() {
  */
 function handleAuthClick() {
   tokenClient.callback = async (response) => {
-    if (response.error !== undefined) {
+    if (response.error !== undefined) {s
       throw (response);
     }
     accessToken = response.access_token;
     localStorage.setItem('accessToken', accessToken);
-    document.getElementById('driveUpload').innerText = 'Upload';
+    document.getElementById('driveUpload').innerHTML = '<img src="icons/export.png" alt="Upload" style="height: 16px;">';
     document.getElementById('signout_button').disabled = false;
     await createPicker();
   };
@@ -2306,6 +2388,7 @@ async function pickerCallback(pickerResp) {
     if (!drawClass) {
       layerFilenameArrays.push(filenames);
       initCanvasFunctionality(images, filenames[0]);
+      document.getElementById('driveUpload').innerHTML = '<img src="icons/plus.png" alt="Upload" style="height: 16px;">';
     }
     else {
       try {

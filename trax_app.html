@@ -27,19 +27,29 @@ limitations under the License.
     <div id="drawingInterface">
       <div id="topControls">
         <div id="topLeftControls" class="rounded">
-          <button id="undo" disabled>&#8634;</button>
-          <button id="redo" disabled>&#8635;</button>
-          <button id="driveUpload" onclick="handleAuthClick()">Sign In</button>
-          <button id="download">Download</button>
-          <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
-          <button id="help" onclick="window.open('https://github.com/ecaldon/trax_app/blob/main/README.md', 'blank')"">?</button>
+          <button id="undo" disabled>
+            <img src="icons/return.png" alt="Undo" style="height: 20px;">
+          </button>
+          <button id="redo" disabled>
+            <img src="icons/return.png" alt="Redo" style="height: 20px; transform: scaleX(-1);">
+          </button>
+          <input type="range" id="zoomSlider" min="5" max="500" value="100" step="1">
+          <label id="zoomValue">100%</label>
+          <button id="zoomFit">
+            <img src="icons/zoomDefault.png" alt="Zoom Fit" style="height: 20px;">
+          </button>
         </div>
         <div id="topCenterControls">
           <label id="frameNum">No file uploaded</label>
         </div>
-        <div id ="topRightControls">
+        <div id ="topRightControls", class="rounded">
           <select name="layerPicker" id="layerPicker">
           </select>
+          <button id="driveUpload" onclick="handleAuthClick()">Sign In</button>
+          <button id="download">
+            <img src="icons/import.png" alt="Download" style="height: 16px;">
+          </button>
+          <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
         </div>
       </div>
       <div id="drawingContainer">
@@ -53,9 +63,10 @@ limitations under the License.
             <label for="selectTool" class="tool">&#8598;</label>
             <input type="radio" id="penTool" name="toolSelect" value="1" checked hidden>
             <label for="penTool" class="tool">&#10002;</label>
-            <input type="radio" id="panTool" name="toolSelect" value="2" hidden>
-            <label for="panTool" class="tool">&#10021;</label>
           </form>
+          <button id="help" onclick="window.open('https://github.com/ecaldon/trax_app/blob/main/README.md', 'blank')"">
+            <img src="icons/question.png" alt="Help" style="height: 24px;">
+          </button>
         </div>
       </div>
       <div id="bottomControls">
@@ -82,15 +93,23 @@ limitations under the License.
           </div>
         </div>
         <div id="frameSeekApparatus">
-          <button id ="backOne">&#9204;</button>
+          <button id ="backOne">
+            <img src="icons/backward.png" alt="Back One" style="height: 16px;">
+          </button>
           <input id="frameSlider" min="0" max="0" value="1" step="1" type="range">
-          <button id ="fwdOne">&#9205;</button>
+          <button id ="fwdOne">
+            <img src="icons/forward.png" alt="Back One" style="height: 16px;">
+          </button>
         </div>
         <div id="contourEditApparatus">
           <input type="color" id="contourColor" name="contourColor" value="#ff0000" disabled>
           <input id="contourLabel" placeholder="Contour label" type="text" disabled>
-          <button id="endContour" disabled>&#9208;</button>
-          <button id="deleteContour" disabled> &#10006;</button>
+          <button id="endContour" disabled>
+            <img src="icons/pause.png" alt="Pause Contour" style="height: 16px;">
+          </button>
+          <button id="deleteContour" disabled>
+            <img src="icons/trashcan.png" alt="Delete Contour" style="height: 16px;">
+          </button>
         </div>
       </div>
     </div>
