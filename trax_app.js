@@ -97,6 +97,10 @@ let overlayOpacity = 0.5;
 /**
  * Object representing the user's view of the canvas, i.e., a camera able to zoom and pan around the canvas.
  * @type {Object} @global @constant
+ * @property {number} baseScale - The base scale factor for the viewport.
+ * @property {number} userZoom - The user-applied zoom factor.
+ * @property {number} offsetX - The horizontal offset of the viewport.
+ * @property {number} offsetY - The vertical offset of the viewport.
  */
 const viewport = {
   baseScale: 1,
@@ -1808,11 +1812,7 @@ window.addEventListener('resize', () => {
 }); 
 
 /**
- * Resizes both canvases to fill canvasContainer and redraws.
- *
- * Currently disabled (not called) because shape coordinates don't
- * currently adjust when the canvas resizes, so shapes visually shift
- * out of place relative to the background image.
+ * Resizes both canvases to fill canvasContainer and redraws with the correct scale.
  */
 function resizeCanvases() { 
   bckdCanvas.width = canvasContainer.offsetWidth;
@@ -1822,10 +1822,19 @@ function resizeCanvases() {
   drawRequestedFrame();
 }
 
+/**
+ * @param {HTMLImageElement} img - The image to compute the scale for.
+ * @param {HTMLCanvasElement} canvas - The canvas to fit the image into.
+ * @returns {number} The scale factor to fit the image into the canvas.
+ */
 function computeBaseScale(img, canvas) {
   return Math.min(canvas.width / img.width, canvas.height / img.height);
 }
 
+/**
+ * Gets the correct selection box size for the current viewport scale and zoom.
+ * @returns {number} The correct selection box size.
+ */
 function getSelBoxSize() {
   return 9 / (viewport.baseScale * viewport.userZoom);
 }
