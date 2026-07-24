@@ -2344,6 +2344,7 @@ function createPicker() { /* TODO: Show the same thing as My Drive */
   .setMimeTypes('image/png,image/jpeg,image/jpg')
   .setIncludeFolders(true)        // shows folders for navigation
   .setSelectFolderEnabled(false)
+  .setParent('root')
   const sharedView = new google.picker.DocsView(google.picker.ViewId.DOCS)
   .setMimeTypes('image/png,image/jpeg,image/jpg')
   .setIncludeFolders(true)
